@@ -1,0 +1,47 @@
+{
+  "name": "my-gsc",
+  "private": true,
+  "version": "0.0.0",
+  "main": "src/main/main.js",
+  "license": "Apache License 2.0",
+  "scripts": {
+    "dev": "cross-env NODE_ENV=dev concurrently vite \"electron .\"",
+    "dist": "cross-env NODE_ENV=prod vite build && electron-builder",
+    "build": "cross-env NODE_ENV=prod vite build",
+    "pack": "cross-env NODE_ENV=prod electron-builder"
+  },
+  "dependencies": {
+    "mitt": "^3.0.1",
+    "pinia": "^2.3.1",
+    "pinia-plugin-persist": "^1.0.0",
+    "sqlite3": "^5.1.7",
+    "vue": "^3.5.17",
+    "vue-router": "^4.5.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.0",
+    "concurrently": "^9.2.0",
+    "cross-env": "^10.0.0",
+    "electron": "^37.2.5",
+    "electron-builder": "^26.0.12",
+    "vite": "^7.0.4",
+    "wait-on": "^8.0.4"
+  },
+  "build": {
+    "appId": "xyz.hxl.mygsc",
+    "productName": "古诗词",
+    "copyright": "Copyright © HXL2025",
+    "directories": {
+      "output": "output"
+    },
+    "win": {
+      "icon": "dist/favicon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": true,
+      "deleteAppDataOnUninstall": true
+    }
+  }
+}
