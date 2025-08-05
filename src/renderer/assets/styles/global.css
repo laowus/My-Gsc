@@ -1,0 +1,13 @@
+.icon-return {
+  cursor: pointer;
+}
+
+*:focus {
+  outline: none;
+}
+
+.logo {
+  background-image: url("../logo.png");
+  width: 60px;
+  height: 60px;
+}

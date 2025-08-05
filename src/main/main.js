@@ -2,11 +2,9 @@ process.env["ELECTRON_DISABLE_SECURITY_WARNINGS"] = "true";
 const { app, BrowserWindow, ipcMain, Menu, dialog, Tray } = require("electron");
 const isDevEnv = process.env["NODE_ENV"] === "dev";
 const path = require("path");
+const { publicDir } = require("./pathUtils");
+const { initDatabase } = require("./dbtool");
 
-if (!isDevEnv) {
-  resourcesRoot = path.dirname(resourcesRoot);
-  publicRoot = path.join(__dirname, "../../dist");
-}
 let mainWin = null,
   tray = null;
 let options = {
@@ -31,6 +29,7 @@ if (!singleInstance) {
     }
   });
 }
+
 const startup = () => {
   init();
 };
@@ -47,7 +46,7 @@ const createWindow = () => {
       mainWindow.loadFile("dist/index.html");
     }
 
-    tray = new Tray(path.join(publicRoot, "/images/logo.png"));
+    tray = new Tray(path.join(publicDir, "/images/logo.png"));
     tray.setToolTip("古诗词");
     let contextMenu = generateContextMenu();
     tray.setContextMenu(contextMenu);
@@ -85,7 +84,7 @@ const generateContextMenu = () => {
   return Menu.buildFromTemplate([
     {
       label: "打开主界面",
-      icon: path.join(publicRoot, "/images/app.png"),
+      icon: path.join(publicDir, "/images/app.png"),
       click: () => {
         mainWin.show();
       },
@@ -94,7 +93,7 @@ const generateContextMenu = () => {
 
     {
       label: "退出",
-      icon: path.join(publicRoot, "/images/quit.png"),
+      icon: path.join(publicDir, "/images/quit.png"),
       click: function () {
         app.quit();
       },
@@ -108,6 +107,7 @@ ipcMain.on("restart-app", () => {
 });
 const init = () => {
   app.whenReady().then(async () => {
+    initDatabase();
     mainWin = createWindow();
   });
 

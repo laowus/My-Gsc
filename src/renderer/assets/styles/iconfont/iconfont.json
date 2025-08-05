@@ -1,0 +1,44 @@
+{
+  "id": "4970692",
+  "name": "poem",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon-",
+  "description": "诗歌",
+  "glyphs": [
+    {
+      "icon_id": "6997493",
+      "name": "我 的",
+      "font_class": "wodedangxuan",
+      "unicode": "e608",
+      "unicode_decimal": 58888
+    },
+    {
+      "icon_id": "1167181",
+      "name": "设置",
+      "font_class": "shezhi",
+      "unicode": "e643",
+      "unicode_decimal": 58947
+    },
+    {
+      "icon_id": "2675010",
+      "name": "分类",
+      "font_class": "fenlei",
+      "unicode": "e62f",
+      "unicode_decimal": 58927
+    },
+    {
+      "icon_id": "6415787",
+      "name": "诗人",
+      "font_class": "shiren1",
+      "unicode": "e7d8",
+      "unicode_decimal": 59352
+    },
+    {
+      "icon_id": "12407479",
+      "name": "huitu-poem",
+      "font_class": "huitu-poem",
+      "unicode": "e65e",
+      "unicode_decimal": 58974
+    }
+  ]
+}
