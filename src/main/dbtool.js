@@ -34,7 +34,7 @@ const initDatabase = async () => {
           console.error("解压或复制文件时出错:", error);
         }
       } else {
-        console.log("数据库文件不存在");
+        console.log("数据库文件存在");
         db = new sqlite3.Database(dbPath, (err) => {
           if (err) {
             console.error(err.message);
@@ -48,8 +48,6 @@ const initDatabase = async () => {
     });
   });
 };
-
-
 
 // 导出批量更新函数
 module.exports = {

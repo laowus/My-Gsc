@@ -4,6 +4,8 @@ const isDevEnv = process.env["NODE_ENV"] === "dev";
 const path = require("path");
 const { publicDir } = require("./pathUtils");
 const { initDatabase } = require("./dbtool");
+const Store = require("electron-store");
+const store = new Store();
 
 let mainWin = null,
   tray = null;
@@ -36,8 +38,17 @@ const startup = () => {
 //创建浏览窗口
 const createWindow = () => {
   if (!mainWin) {
+    // 从 electron-store 中获取窗口大小和位置
+    const windowWidth = parseInt(store.get("mainWindowWidth") || 1050);
+    const windowHeight = parseInt(store.get("mainWindowHeight") || 660);
+    const windowX = parseInt(store.get("mainWindowX"));
+    const windowY = parseInt(store.get("mainWindowY"));
     const mainWindow = new BrowserWindow({
       ...options,
+      width: windowWidth,
+      height: windowHeight,
+      x: windowX,
+      y: windowY,
     });
     if (isDevEnv) {
       mainWindow.loadURL("http://localhost:9000/");
@@ -60,6 +71,32 @@ const createWindow = () => {
     mainWindow.once("ready-to-show", () => {
       mainWindow.show();
     });
+
+    // 监听窗口大小改变事件
+    mainWindow.on("resize", () => {
+      if (!mainWindow.isDestroyed()) {
+        if (!mainWindow.isMaximized()) {
+          let bounds = mainWindow.getBounds();
+          store.set({
+            mainWindowWidth: bounds.width,
+            mainWindowHeight: bounds.height,
+          });
+        } else {
+          console.log("当前为大化状态，不保存窗口大小和位置");
+        }
+      }
+    }); // 监听窗口移动事件
+    mainWindow.on("move", () => {
+      if (!mainWindow.isDestroyed()) {
+        if (!mainWindow.isMaximized()) {
+          let bounds = mainWindow.getBounds();
+          store.set({
+            mainWindowX: bounds.x,
+            mainWindowY: bounds.y,
+          });
+        }
+      }
+    });
     return mainWindow;
   }
   return mainWin;
@@ -73,7 +110,24 @@ ipcMain.on("window-min", (event) => {
 ipcMain.on("window-close", (event) => {
   app.quit();
 });
-
+ipcMain.on("window-max", (event) => {
+  const webContent = event.sender;
+  const win = BrowserWindow.fromWebContents(webContent);
+  if (win.isMaximized()) {
+    const width = store.get("mainWindowWidth") || 1050;
+    const height = store.get("mainWindowHeight") || 660;
+    const x = store.get("mainWindowX") || mainWin.getPosition()[0];
+    const y = store.get("mainWindowY") || mainWin.getPosition()[1];
+    if (width && height) {
+      win.setSize(width, height);
+      if (x && y) {
+        win.setPosition(x, y);
+      }
+    }
+  } else {
+    win.maximize();
+  }
+});
 const sendToRenderer = (channel, args) => {
   try {
     if (mainWin) mainWin.webContents.send(channel, args);
@@ -109,6 +163,7 @@ const init = () => {
   app.whenReady().then(async () => {
     initDatabase();
     mainWin = createWindow();
+    initWindowBounds(mainWin);
   });
 
   app.on("activate", (event) => {
@@ -127,6 +182,13 @@ const init = () => {
     sendToRenderer("app-quit");
   });
 };
-
+const initWindowBounds = (win) => {
+  store.get("mainWindowWidth") ||
+    store.set("mainWindowWidth", win.getSize()[0]);
+  store.get("mainWindowHeight") ||
+    store.set("mainWindowHeight", win.getSize()[1]);
+  store.get("mainWindowX") || store.set("mainWindowX", win.getPosition()[0]);
+  store.get("mainWindowY") || store.set("mainWindowY", win.getPosition()[1]);
+};
 //启动应用
 startup();

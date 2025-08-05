@@ -6,6 +6,27 @@
   "description": "诗歌",
   "glyphs": [
     {
+      "icon_id": "659177",
+      "name": "ic_zoom_out_2",
+      "font_class": "iczoomout2",
+      "unicode": "e646",
+      "unicode_decimal": 58950
+    },
+    {
+      "icon_id": "4880431",
+      "name": "关闭",
+      "font_class": "guanbi",
+      "unicode": "e609",
+      "unicode_decimal": 58889
+    },
+    {
+      "icon_id": "14421618",
+      "name": "最大化",
+      "font_class": "zuidahua_huaban1",
+      "unicode": "e673",
+      "unicode_decimal": 58995
+    },
+    {
       "icon_id": "6997493",
       "name": "我 的",
       "font_class": "wodedangxuan",

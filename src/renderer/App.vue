@@ -1,11 +1,13 @@
 <script setup>
 import leftMenu from "./components/leftMenu.vue";
+import maxMinCancel from "./components/maxMinClose.vue";
 </script>
 
 <template>
   <div class="container">
     <leftMenu></leftMenu>
     <div class="content">
+      <maxMinCancel></maxMinCancel>
       <router-view></router-view>
     </div>
   </div>
@@ -23,7 +25,6 @@ import leftMenu from "./components/leftMenu.vue";
   padding: 14px;
 }
 .content {
-  padding: 20px;
   flex: 1;
 }
 .item {

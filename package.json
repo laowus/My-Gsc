@@ -11,6 +11,7 @@
     "pack": "cross-env NODE_ENV=prod electron-builder"
   },
   "dependencies": {
+    "electron-store": "^8.0.1",
     "extract-zip": "^2.0.1",
     "mitt": "^3.0.0",
     "pinia": "^2.1.3",
