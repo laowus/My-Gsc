@@ -78,8 +78,11 @@ watch(curindex, (newVal, oldVal) => {
       </div>
     </div>
     <div class="poem-right" v-if="curPoetry">
-      <h2 class="poem-title">{{ curPoetry.title }}</h2>
-      <div class="poem-writer">[{{ curPoetry.writer.dynastyname }}] {{ curPoetry.writer.writername }}</div>
+      <h2>{{ curPoetry.title }}</h2>
+      <div class="poem-writer">
+        <KindIcon :kindid="curPoetry.kindid" />
+        [{{ curPoetry.writer.dynastyname }}] {{ curPoetry.writer.writername }}
+      </div>
       <div class="poem-content" v-html="curPoetry.content"></div>
     </div>
   </div>
@@ -129,27 +132,31 @@ watch(curindex, (newVal, oldVal) => {
   font-size: 14px;
   color: #34495e;
 }
-
-.poem-content {
-  font-size: 18px;
-}
-
 .poem-right {
   display: flex;
-  width: 70%;
   flex-direction: column;
-  background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
-  border-radius: 16px;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e0e0e0;
-  margin: 30px 10px 20px 20px;
-  padding: 25px;
   text-align: center;
-  transition: all 0.3s ease;
-  margin-left: auto;
-  margin-right: auto;
-  transform: translateY(0);
-  gap: 10px;
+  margin: 0 auto;
+  width: 80%;
+  margin-top: 20px;
+}
+.poem-writer {
+  font-size: 12px;
+  color: #7f8c8d;
+  text-align: left;
+  margin-left: 100px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 10px;
+}
+
+.poem-content {
+  font-size: 14px;
+  color: #34495e;
+  font-size: 20px;
+  font-weight: 700;
 }
 
 .icon-btn {
