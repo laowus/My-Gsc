@@ -6,6 +6,20 @@
   "description": "诗歌",
   "glyphs": [
     {
+      "icon_id": "19267015",
+      "name": "加",
+      "font_class": "jia",
+      "unicode": "e752",
+      "unicode_decimal": 59218
+    },
+    {
+      "icon_id": "19476325",
+      "name": "搜索",
+      "font_class": "sousuobeifen2",
+      "unicode": "e628",
+      "unicode_decimal": 58920
+    },
+    {
       "icon_id": "659177",
       "name": "ic_zoom_out_2",
       "font_class": "iczoomout2",

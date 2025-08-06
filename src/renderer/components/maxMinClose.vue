@@ -32,7 +32,10 @@ const handleMix = () => {
   flex-direction: row;
   height: 30px;
   width: 100%;
-  background: #f5f5f5;
+  position: absolute; /* 设置绝对定位 */
+  top: 0; /* 距离顶部 0 像素 */
+  right: 0; /* 距离右侧 0 像素 */
+  z-index: 999;
 }
 .drag {
   flex: 1;
@@ -48,7 +51,7 @@ const handleMix = () => {
   padding-right: 10px;
 }
 .maxMinClose button {
-  width: 30px;
+  width: 20px;
   height: 30px;
   background: transparent;
   border: none;

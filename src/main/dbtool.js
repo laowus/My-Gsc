@@ -1,5 +1,3 @@
-const path = require("path");
-const { app, ipcMain } = require("electron");
 const { dbZipPath, dbDir, dbPath } = require("./pathUtils");
 const extract = require("extract-zip");
 const fs = require("fs");
@@ -49,7 +47,24 @@ const initDatabase = async () => {
   });
 };
 
+const getAllPoetry = (event) => {
+  db.all(
+    ` select p.poetryid, p.kindid, p.typeid,w.dynastyid,w.writerid,w.writername,p.title, p.content 
+    from Poetry p
+    join Writer w on p.writerid = w.writerid `,
+    (err, rows) => {
+      if (err) {
+        console.error(err.message);
+        event.returnValue = { success: false };
+      } else {
+        event.returnValue = { success: true, data: rows };
+      }
+    }
+  );
+};
+
 // 导出批量更新函数
 module.exports = {
   initDatabase,
+  getAllPoetry
 };

@@ -40,7 +40,7 @@ const menuClick = (idx) => {
 
 <template>
   <div class="menu">
-    <img class="logo" src="../assets/logo.png" />
+    <img id="logo" src="../assets/logo.png" />
     <button
       v-for="(item, idx) in menuList"
       :key="idx"
@@ -57,6 +57,12 @@ const menuClick = (idx) => {
 </template>
 
 <style>
+#logo {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto;
+}
+
 .btn-icon {
   align-items: center;
   justify-content: center;

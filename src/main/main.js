@@ -6,6 +6,7 @@ const { publicDir } = require("./pathUtils");
 const { initDatabase } = require("./dbtool");
 const Store = require("electron-store");
 const store = new Store();
+const dbHandle = require("./dbhandle");
 
 let mainWin = null,
   tray = null;
@@ -31,6 +32,8 @@ if (!singleInstance) {
     }
   });
 }
+
+dbHandle();
 
 const startup = () => {
   init();

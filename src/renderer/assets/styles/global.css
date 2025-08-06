@@ -11,3 +11,17 @@
   width: 60px;
   height: 60px;
 }
+/* 自定义滚动条样式 */
+::-webkit-scrollbar {
+  width: 5px; /* 垂直滚动条宽度 */
+  height: 5px; /* 水平滚动条高度 */
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #c1c1c1; /* 滚动条滑块颜色 */
+  border-radius: 3px; /* 滚动条滑块圆角 */
+}
+
+::-webkit-scrollbar-track {
+  background-color: #f5f5f5; /* 滚动条轨道颜色 */
+}
