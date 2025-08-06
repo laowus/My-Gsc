@@ -2,8 +2,18 @@ const { ipcMain } = require("electron");
 const { getAllPoetry } = require("./dbtool");
 
 const dbHandle = () => {
-  ipcMain.on("db-get-all-poetry", (event) => {
-    getAllPoetry(event); // 调用重置表函数
+  ipcMain.handle("db-get-all-poetry", async () => {
+    return new Promise((resolve, reject) => {
+      getAllPoetry((result) => {
+        if (result.success) {
+          resolve(result);
+        } else {
+          reject(new Error("获取诗歌数据失败"));
+        }
+      });
+    });
   });
 };
+
+
 module.exports = dbHandle;

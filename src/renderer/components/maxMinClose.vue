@@ -1,5 +1,9 @@
 <script setup>
+import { onMounted, ref, computed } from "vue";
 const { ipcRenderer } = window.require("electron");
+
+const isTop = ref(false);
+
 const handleClose = () => {
   ipcRenderer.send("window-close");
 };
@@ -9,19 +13,38 @@ const handleMax = () => {
 const handleMix = () => {
   ipcRenderer.send("window-min");
 };
+
+const handleTop = () => {
+  ipcRenderer.send("window-top", !isTop.value);
+  isTop.value = !isTop.value;
+};
+
+onMounted(() => {
+  const isTp = ipcRenderer.sendSync("isTop");
+  console.log(isTp);
+  isTop.value = isTp;
+});
+
+// 新增计算属性
+const topClass = computed(() => {
+  return isTop.value ? { isTop: true } : { noTop: true };
+});
 </script>
 <template>
   <div class="bar">
     <div class="drag"></div>
     <div class="maxMinClose">
-      <button>
-        <span class="iconfont icon-iczoomout2" @click="handleMix"></span>
+      <button title="置顶">
+        <span @click="handleTop" class="iconfont icon-zhiding" :class="topClass" title="置顶"></span>
       </button>
-      <button>
+      <button title="最小化">
+        <span @click="handleMix" class="iconfont icon-iczoomout2" title="最小化"></span>
+      </button>
+      <button title="最大化">
         <span class="iconfont icon-zuidahua_huaban1" @click="handleMax"></span>
       </button>
-      <button>
-        <span class="iconfont icon-guanbi" @click="handleClose"></span>
+      <button title="关闭">
+        <span class="iconfont icon-guanbi" @click="handleClose" title="关闭"></span>
       </button>
     </div>
   </div>
@@ -47,7 +70,7 @@ const handleMix = () => {
 .maxMinClose {
   display: flex;
   flex-direction: row;
-  gap: 10px;
+  gap: 15px;
   padding-right: 10px;
 }
 .maxMinClose button {
@@ -56,5 +79,12 @@ const handleMix = () => {
   background: transparent;
   border: none;
   cursor: pointer;
+}
+.isTop {
+  color: #000;
+}
+
+.noTop {
+  color: #ccc;
 }
 </style>

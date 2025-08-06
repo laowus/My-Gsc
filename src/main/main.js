@@ -17,8 +17,8 @@ let options = {
   webPreferences: {
     nodeIntegration: true,
     contextIsolation: false,
-    webSecurity: false,
-  },
+    webSecurity: false
+  }
 };
 
 const singleInstance = app.requestSingleInstanceLock();
@@ -51,7 +51,7 @@ const createWindow = () => {
       width: windowWidth,
       height: windowHeight,
       x: windowX,
-      y: windowY,
+      y: windowY
     });
     if (isDevEnv) {
       mainWindow.loadURL("http://localhost:9000/");
@@ -82,7 +82,7 @@ const createWindow = () => {
           let bounds = mainWindow.getBounds();
           store.set({
             mainWindowWidth: bounds.width,
-            mainWindowHeight: bounds.height,
+            mainWindowHeight: bounds.height
           });
         } else {
           console.log("当前为大化状态，不保存窗口大小和位置");
@@ -95,7 +95,7 @@ const createWindow = () => {
           let bounds = mainWindow.getBounds();
           store.set({
             mainWindowX: bounds.x,
-            mainWindowY: bounds.y,
+            mainWindowY: bounds.y
           });
         }
       }
@@ -104,6 +104,22 @@ const createWindow = () => {
   }
   return mainWin;
 };
+
+// 添加置顶事件监听
+ipcMain.on("window-top", (event, isTop) => {
+  const webContent = event.sender;
+  const win = BrowserWindow.fromWebContents(webContent);
+  if (win) {
+    win.setAlwaysOnTop(isTop);
+  }
+});
+
+// 修改获取置顶状态事件监听
+ipcMain.on("isTop", (event) => {
+  const webContent = event.sender;
+  const win = BrowserWindow.fromWebContents(webContent);
+  event.returnValue = win ? win.isAlwaysOnTop() : false;
+});
 
 ipcMain.on("window-min", (event) => {
   const webContent = event.sender;
@@ -144,7 +160,7 @@ const generateContextMenu = () => {
       icon: path.join(publicDir, "/images/app.png"),
       click: () => {
         mainWin.show();
-      },
+      }
     },
     { type: "separator" }, // 添加分隔线
 
@@ -153,8 +169,8 @@ const generateContextMenu = () => {
       icon: path.join(publicDir, "/images/quit.png"),
       click: function () {
         app.quit();
-      },
-    },
+      }
+    }
   ]);
 };
 // 监听重启程序请求
@@ -186,10 +202,8 @@ const init = () => {
   });
 };
 const initWindowBounds = (win) => {
-  store.get("mainWindowWidth") ||
-    store.set("mainWindowWidth", win.getSize()[0]);
-  store.get("mainWindowHeight") ||
-    store.set("mainWindowHeight", win.getSize()[1]);
+  store.get("mainWindowWidth") || store.set("mainWindowWidth", win.getSize()[0]);
+  store.get("mainWindowHeight") || store.set("mainWindowHeight", win.getSize()[1]);
   store.get("mainWindowX") || store.set("mainWindowX", win.getPosition()[0]);
   store.get("mainWindowY") || store.set("mainWindowY", win.getPosition()[1]);
 };

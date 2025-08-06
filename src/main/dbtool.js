@@ -47,7 +47,7 @@ const initDatabase = async () => {
   });
 };
 
-const getAllPoetry = (event) => {
+const getAllPoetry = (callback) => {
   db.all(
     ` select p.poetryid, p.kindid, p.typeid,w.dynastyid,w.writerid,w.writername,p.title, p.content 
     from Poetry p
@@ -55,9 +55,9 @@ const getAllPoetry = (event) => {
     (err, rows) => {
       if (err) {
         console.error(err.message);
-        event.returnValue = { success: false };
+        callback({ success: false });
       } else {
-        event.returnValue = { success: true, data: rows };
+        callback({ success: true, data: rows });
       }
     }
   );

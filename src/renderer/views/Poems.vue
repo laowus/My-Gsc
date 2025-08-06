@@ -8,23 +8,54 @@ import KindIcon from "../components/KindIcon.vue";
 const poetryList = ref([]);
 const curindex = ref(0);
 const curPoetry = ref(null);
+const isLoading = ref(true); // 添加加载状态
 
-const fetchPoetrys = () => {
-  const poetryData = ipcRenderer.sendSync("db-get-all-poetry");
-  poetryList.value = poetryData.data.map((item) => {
-    const writer = new Writer(item.writerid, item.writername, item.dynastyid);
-    return new Poetry(item.poetryid, item.typeid, item.kindid, writer, item.title, item.content, item.infos);
-  });
+const fetchPoetrys = async () => {
+  try {
+    await ipcRenderer.invoke("db-get-all-poetry").then((res) => {
+      if (res.success) {
+        poetryList.value = res.data.map((item) => {
+          const writer = new Writer(item.writerid, item.writername, item.dynastyid);
+          return new Poetry(item.poetryid, item.typeid, item.kindid, writer, item.title, item.content, item.infos);
+        });
+        console.log(poetryList.value.length);
+        if (poetryList.value.length > 0) {
+          curPoetry.value = poetryList.value[curindex.value];
+          console.log("curPoetry.value", curPoetry.value);
+        }
+      }
+    }); // 使用异步方法
+  } catch (error) {
+    console.error("获取诗歌数据失败:", error);
+  } finally {
+    isLoading.value = false; // 加载完成
+  }
 };
 
 onMounted(() => {
   fetchPoetrys();
-  if (poetryList.value.length > 0) {
-    curPoetry.value = poetryList.value[curindex.value];
+});
+
+const handlePoemClick = (index) => {
+  console.log("index", index);
+  curindex.value = index;
+};
+
+watch(curindex, (newVal, oldVal) => {
+  if (newVal !== oldVal) {
+    curPoetry.value = poetryList.value[newVal];
   }
 });
 </script>
 <template>
+  <div v-if="isLoading" class="modal-overlay">
+    <div class="loading">
+      <div class="progress-bar">
+        <div class="progress"></div>
+      </div>
+      <div>加载中，请稍候...</div>
+    </div>
+  </div>
   <div class="poems">
     <div class="poems-left">
       <div class="top-bar">
@@ -37,21 +68,22 @@ onMounted(() => {
         </button>
       </div>
       <div class="poems-left-content">
-        <div v-for="(item, index) in poetryList" :key="item.poetryid" class="poem-item">
-          <div class="poem-item-title">{{ index + 1 }} 、{{ item.title }}</div>
-          <div class="poem-item-writer"><KindIcon :kindid="item.kindid" />[{{ item.writer.dynastyname }}] {{ item.writer.writername }}</div>
-          <div class="poem-item-content" v-html="item.content.slice(0, 50) + (item.content.length > 50 ? '...' : '')"></div>
+        <div>
+          <div v-for="(item, index) in poetryList" :key="item.poetryid" class="poem-item" @click="handlePoemClick(index)" :class="{ pselected: index === curindex }">
+            <div class="poem-item-title">{{ index + 1 }} 、{{ item.title }}</div>
+            <div class="poem-item-writer"><KindIcon :kindid="item.kindid" />[{{ item.writer.dynastyname }}] {{ item.writer.writername }}</div>
+            <div class="poem-item-content" v-html="item.content.slice(0, 50) + (item.content.length > 50 ? '...' : '')"></div>
+          </div>
         </div>
       </div>
     </div>
-    <div class="poem-right">
+    <div class="poem-right" v-if="curPoetry">
       <h2 class="poem-title">{{ curPoetry.title }}</h2>
       <div class="poem-writer">[{{ curPoetry.writer.dynastyname }}] {{ curPoetry.writer.writername }}</div>
       <div class="poem-content" v-html="curPoetry.content"></div>
     </div>
   </div>
 </template>
-
 <style>
 .poems-left-content {
   margin-top: 10px;
@@ -72,9 +104,13 @@ onMounted(() => {
 }
 
 .poem-item:hover {
-  background-color: #f8f9fa;
+  background-color: #ccc875;
   transform: translateY(-3px);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+}
+.pselected {
+  background-color: #ccc875;
 }
 .poem-item-title {
   font-size: 16px;
@@ -94,15 +130,26 @@ onMounted(() => {
   color: #34495e;
 }
 
+.poem-content {
+  font-size: 18px;
+}
+
 .poem-right {
   display: flex;
-  width: 80%;
+  width: 70%;
   flex-direction: column;
-  background-color: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+  border-radius: 16px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
   border: 1px solid #e0e0e0;
-  margin: 30px 10px 5px 10px;
+  margin: 30px 10px 20px 20px;
+  padding: 25px;
+  text-align: center;
+  transition: all 0.3s ease;
+  margin-left: auto;
+  margin-right: auto;
+  transform: translateY(0);
+  gap: 10px;
 }
 
 .icon-btn {
@@ -121,7 +168,6 @@ onMounted(() => {
   display: flex;
   flex-direction: row;
   background-color: #f5f5f5;
-  height: 99vh;
 }
 .poems-left {
   width: 300px;
@@ -129,6 +175,7 @@ onMounted(() => {
   flex-direction: column;
   border: 1px solid #ccc;
   padding-top: 20px;
+  height: 99vh;
 }
 
 .top-bar {
@@ -158,5 +205,55 @@ onMounted(() => {
   width: 100%;
   flex: 1;
   padding: 5px;
+}
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+.loading {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 18px;
+  color: #2c3e50;
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  z-index: 1001;
+}
+
+.progress-bar {
+  width: 300px;
+  height: 5px;
+  background-color: #e0e0e0;
+  border-radius: 5px;
+}
+
+.progress {
+  height: 100%;
+  background-color: #42b983;
+  border-radius: 5px;
+  width: 0%;
+  animation: progress 1.5s infinite;
+}
+
+@keyframes progress {
+  0% {
+    width: 0%;
+  }
+  50% {
+    width: 100%;
+  }
+  100% {
+    width: 0%;
+  }
 }
 </style>
