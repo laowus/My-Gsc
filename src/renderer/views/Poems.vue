@@ -54,6 +54,7 @@ onMounted(() => {
 
 <style>
 .poems-left-content {
+  margin-top: 10px;
   flex: 1;
   overflow-y: auto;
 }
