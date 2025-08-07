@@ -19,6 +19,7 @@
     "sqlite3": "^5.1.7",
     "vue": "^3.2.25",
     "vue-router": "^4.0.14",
+    "vue-virtual-scroller": "^2.0.0-beta.8",
     "vue3-lazyload": "^0.3.6"
   },
   "devDependencies": {
@@ -27,8 +28,8 @@
     "cross-env": "^7.0.3",
     "electron": "^35.1.4",
     "electron-builder": "^26.0.12",
-    "wait-on": "^6.0.1",
-    "vite": "^6.3.5"
+    "vite": "^6.3.5",
+    "wait-on": "^6.0.1"
   },
   "build": {
     "appId": "xyz.hxl.mygsc",
