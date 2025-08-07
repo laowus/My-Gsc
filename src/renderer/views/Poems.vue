@@ -1,14 +1,19 @@
 <script setup>
 const { ipcRenderer } = window.require("electron");
-import { ref, watch, reactive, onMounted } from "vue";
+import { ref, watch, reactive, onMounted, nextTick } from "vue";
+import { storeToRefs } from "pinia";
 import Poetry from "../model/Poetry";
 import Writer from "../model/Writer";
 import KindIcon from "../components/KindIcon.vue";
-
-const poetryList = ref([]);
-const curindex = ref(0);
+import PoetryDetail from "../components/poetryDetail.vue";
+import { useAppStore } from "../store/appStore";
+const { setCurIndex } = useAppStore();
+const { curIndex } = storeToRefs(useAppStore());
 const curPoetry = ref(null);
+const poetryList = ref([]);
 const isLoading = ref(true); // 添加加载状态
+const poemsLeftContent = ref(null);
+const poemItems = ref([]);
 
 const fetchPoetrys = async () => {
   try {
@@ -18,10 +23,10 @@ const fetchPoetrys = async () => {
           const writer = new Writer(item.writerid, item.writername, item.dynastyid);
           return new Poetry(item.poetryid, item.typeid, item.kindid, writer, item.title, item.content, item.infos);
         });
-        console.log(poetryList.value.length);
-        if (poetryList.value.length > 0) {
-          curPoetry.value = poetryList.value[curindex.value];
-          console.log("curPoetry.value", curPoetry.value);
+        if (curIndex.value >= poetryList.value.length) {
+          curIndex.value = 0;
+        } else {
+          curPoetry.value = poetryList.value[curIndex.value];
         }
       }
     }); // 使用异步方法
@@ -29,23 +34,50 @@ const fetchPoetrys = async () => {
     console.error("获取诗歌数据失败:", error);
   } finally {
     isLoading.value = false; // 加载完成
+    // 在数据加载完成后调用滚动方法
+    nextTick(() => {
+      scrollToCurrentIndex();
+    });
   }
 };
-
 onMounted(() => {
   fetchPoetrys();
 });
 
 const handlePoemClick = (index) => {
-  console.log("index", index);
-  curindex.value = index;
+  console.log(index);
+  curIndex.value = index;
+  curPoetry.value = poetryList.value[index];
+  // 在点击时调用滚动方法
+  nextTick(() => {
+    scrollToCurrentIndex();
+  });
 };
 
-watch(curindex, (newVal, oldVal) => {
-  if (newVal !== oldVal) {
-    curPoetry.value = poetryList.value[newVal];
+const scrollToCurrentIndex = () => {
+  if (poemsLeftContent.value && poemItems.value[curIndex.value]) {
+    console.log(poemItems.value[curIndex.value]);
+    poemItems.value[curIndex.value].scrollIntoView({
+      behavior: "smooth",
+      block: "nearest"
+    });
   }
-});
+};
+
+const search = () => {
+  const keyword = document.querySelector(".searche-input").value;
+  if (keyword) {
+    const filteredPoetrys = poetryList.value.filter((item) => {
+      return item.title.includes(keyword) || item.content.includes(keyword);
+    });
+    if (filteredPoetrys.length > 0) {
+      curIndex.value = poetryList.value.indexOf(filteredPoetrys[0]);
+      handlePoemClick(curIndex.value);
+    } else {
+      alert("未找到相关诗歌");
+    }
+  }
+};
 </script>
 <template>
   <div v-if="isLoading" class="modal-overlay">
@@ -61,15 +93,15 @@ watch(curindex, (newVal, oldVal) => {
       <div class="top-bar">
         <div class="search">
           <span class="iconfont icon-sousuobeifen2"></span>
-          <input type="text" placeholder="输入标题" class="searche-input" />
+          <input type="text" placeholder="输入关键字" class="searche-input" />
         </div>
-        <button class="icon-btn">
+        <button class="icon-btn" @click="search">
           <span class="iconfont icon-jia" style="font-size: 30px"></span>
         </button>
       </div>
-      <div class="poems-left-content">
+      <div class="poems-left-content" ref="poemsLeftContent">
         <div>
-          <div v-for="(item, index) in poetryList" :key="item.poetryid" class="poem-item" @click="handlePoemClick(index)" :class="{ pselected: index === curindex }">
+          <div v-for="(item, index) in poetryList" :key="item.poetryid" class="poem-item" @click="handlePoemClick(index)" :class="{ pselected: index === curIndex }" ref="poemItems">
             <div class="poem-item-title">{{ index + 1 }} 、{{ item.title }}</div>
             <div class="poem-item-writer"><KindIcon :kindid="item.kindid" />[{{ item.writer.dynastyname }}] {{ item.writer.writername }}</div>
             <div class="poem-item-content" v-html="item.content.slice(0, 50) + (item.content.length > 50 ? '...' : '')"></div>
@@ -78,12 +110,7 @@ watch(curindex, (newVal, oldVal) => {
       </div>
     </div>
     <div class="poem-right" v-if="curPoetry">
-      <h2>{{ curPoetry.title }}</h2>
-      <div class="poem-writer">
-        <KindIcon :kindid="curPoetry.kindid" />
-        [{{ curPoetry.writer.dynastyname }}] {{ curPoetry.writer.writername }}
-      </div>
-      <div class="poem-content" v-html="curPoetry.content"></div>
+      <PoetryDetail :poetryid="curPoetry.poetryid" />
     </div>
   </div>
 </template>
@@ -135,30 +162,9 @@ watch(curindex, (newVal, oldVal) => {
 .poem-right {
   display: flex;
   flex-direction: column;
-  text-align: center;
-  margin: 0 auto;
-  width: 80%;
-  margin-top: 20px;
+  height: 92vh;
+  margin-top: 10px;
 }
-.poem-writer {
-  font-size: 12px;
-  color: #7f8c8d;
-  text-align: left;
-  margin-left: 100px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-start;
-  padding: 10px;
-}
-
-.poem-content {
-  font-size: 14px;
-  color: #34495e;
-  font-size: 20px;
-  font-weight: 700;
-}
-
 .icon-btn {
   width: 30px;
   height: 30px;
@@ -171,13 +177,13 @@ watch(curindex, (newVal, oldVal) => {
   display: flex;
 }
 .poems {
-  width: 100%;
   display: flex;
   flex-direction: row;
   background-color: #f5f5f5;
 }
 .poems-left {
   width: 300px;
+  min-width: 300px;
   display: flex;
   flex-direction: column;
   border: 1px solid #ccc;

@@ -44,7 +44,8 @@ const createWindow = () => {
     // 从 electron-store 中获取窗口大小和位置
     const windowWidth = parseInt(store.get("mainWindowWidth") || 1050);
     const windowHeight = parseInt(store.get("mainWindowHeight") || 660);
-    const windowX = parseInt(store.get("mainWindowX"));
+    // 增加默认值处理，避免 NaN
+    const windowX = parseInt(store.get("mainWindowX")) || 0;
     const windowY = parseInt(store.get("mainWindowY"));
     const mainWindow = new BrowserWindow({
       ...options,

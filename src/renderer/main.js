@@ -26,9 +26,10 @@ app.config.errorHandler = (err, vm, info) => {
 };
 
 app
+  .use(pinia)
   .use(router)
   .use(VueLazyLoad, {
     loading: "icon.png",
-    error: "icon.png",
+    error: "icon.png"
   })
   .mount("#app");

@@ -63,8 +63,40 @@ const getAllPoetry = (callback) => {
   );
 };
 
+const getPoetryByid = (poetryid, callback) => {
+  db.get(
+    ` select p.poetryid, p.kindid, p.typeid,w.dynastyid,w.writerid,w.writername,p.title, p.content 
+    from Poetry p
+    join Writer w on p.writerid = w.writerid 
+    where p.poetryid = ?`,
+    poetryid,
+    (err, row) => {
+      if (err) {
+        console.error(err.message);
+        callback({ success: false });
+      } else {
+        callback({ success: true, data: row });
+      }
+    }
+  );
+};
+
+const getInfoList = (cateid, id, callback) => {
+  db.all(` select * from Info where  cateid=? and fid=?`, cateid, id, (err, rows) => {
+    if (err) {
+      console.error(err.message);
+      callback({ success: false });
+    } else {
+      callback({ success: true, data: rows });
+    }
+  });
+};
+
 // 导出批量更新函数
 module.exports = {
   initDatabase,
-  getAllPoetry
+  getAllPoetry,
+  getPoetryByid,
+  getInfoList,
+
 };
