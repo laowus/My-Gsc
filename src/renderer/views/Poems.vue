@@ -1,6 +1,7 @@
 <script setup>
 const { ipcRenderer } = window.require("electron");
-import { ref, watch, reactive, onMounted, nextTick } from "vue";
+import { ref, watch, reactive, onMounted, nextTick, onUnmounted } from "vue";
+
 import { storeToRefs } from "pinia";
 import Poetry from "../model/Poetry";
 import Writer from "../model/Writer";
@@ -13,26 +14,37 @@ const { setCurIndex } = useAppStore();
 const { curIndex } = storeToRefs(useAppStore());
 const curPoetry = ref(null);
 const poetryList = ref([]);
+<<<<<<< HEAD
+=======
+const isLoading = ref(true); // 添加加载状态
+const poemsLeftContent = ref(null);
+const poemItems = ref([]);
+const page = ref(1);
+const pageSize = ref(20);
+const totalPoetry = ref(0);
+>>>>>>> 142897f0e70019155b906e9734738a665ae61012
 
-const fetchPoetrys = async () => {
+// 新增：存储需要定位的索引
+const targetIndex = ref(curIndex.value);
+
+const fetchPoetrys = () => {
   try {
-    await ipcRenderer.invoke("db-get-all-poetry").then((res) => {
+    isLoading.value = true;
+    // 新增：获取总数据量
+    ipcRenderer.send("db-get-poetry-count");
+    // 新增：处理获取总数据量的回复
+    ipcRenderer.on("db-get-poetry-count-reply", (event, res) => {
       if (res.success) {
-        poetryList.value = res.data.map((item) => {
-          const writer = new Writer(item.writerid, item.writername, item.dynastyid);
-          return new Poetry(item.poetryid, item.typeid, item.kindid, writer, item.title, item.content, item.infos);
-        });
-        if (curIndex.value >= poetryList.value.length) {
-          curIndex.value = 0;
-        } else {
-          curPoetry.value = poetryList.value[curIndex.value];
-        }
+        totalPoetry.value = res.data;
       }
-    }); // 使用异步方法
+    });
+
+    ipcRenderer.send("db-get-poetry-by-page", { page: page.value, pageSize: pageSize.value });
   } catch (error) {
     console.error("获取诗歌数据失败:", error);
   }
 };
+<<<<<<< HEAD
 onMounted(async () => {
   await fetchPoetrys();
   nextTick(() => {
@@ -46,19 +58,97 @@ const handlePoemClick = (index) => {
   console.log(index);
   curIndex.value = index;
   curPoetry.value = poetryList.value[index];
+=======
+
+// 新增：标记是否是首次加载数据
+const isFirstLoad = ref(true);
+
+// 修改：处理数据加载完成后的逻辑
+const handlePoetryReply = (event, res) => {
+  if (res.success) {
+    // 追加数据而非覆盖
+    poetryList.value = [
+      ...poetryList.value,
+      ...res.data.map((item) => {
+        const writer = new Writer(item.writerid, item.writername, item.dynastyid);
+        return new Poetry(item.poetryid, item.typeid, item.kindid, writer, item.title, item.content, item.infos);
+      })
+    ];
+
+    // 仅在首次加载时检查是否加载到目标索引
+    if (isFirstLoad.value && poetryList.value.length > targetIndex.value) {
+      curIndex.value = targetIndex.value;
+      curPoetry.value = poetryList.value[curIndex.value];
+      nextTick(() => {
+        scrollToCurrentIndex();
+      });
+      isFirstLoad.value = false;
+    } else if (!isLoading.value && poetryList.value.length < totalPoetry.value) {
+      // 如果还没加载完所有数据，继续加载下一页
+      loadMore();
+    }
+  }
+  isLoading.value = false;
 };
 
-const search = () => {
-  const keyword = document.querySelector(".searche-input").value;
-  if (keyword) {
-    const filteredPoetrys = poetryList.value.filter((item) => {
-      return item.title.includes(keyword) || item.content.includes(keyword);
+onMounted(() => {
+  // 计算需要加载的起始页码
+  const startPage = Math.floor(targetIndex.value / pageSize.value) + 1;
+  page.value = startPage;
+  fetchPoetrys();
+  ipcRenderer.on("db-get-poetry-by-page-reply", handlePoetryReply);
+  ipcRenderer.on("db-get-poetry-by-page-error", handlePoetryError);
+  // 添加滚动事件监听
+  poemsLeftContent.value?.addEventListener("scroll", handleScroll);
+});
+
+onUnmounted(() => {
+  ipcRenderer.removeListener("db-get-poetry-by-page-reply", handlePoetryReply);
+  ipcRenderer.removeListener("db-get-poetry-by-page-error", handlePoetryError);
+  // 移除滚动事件监听
+  poemsLeftContent.value?.removeEventListener("scroll", handleScroll);
+});
+
+const scrollToCurrentIndex = () => {
+  if (poemsLeftContent.value && poemItems.value[curIndex.value]) {
+    console.log(poemItems.value[curIndex.value]);
+    poemItems.value[curIndex.value].scrollIntoView({
+      behavior: "smooth",
+      block: "nearest"
     });
-    if (filteredPoetrys.length > 0) {
-      curIndex.value = poetryList.value.indexOf(filteredPoetrys[0]);
-      handlePoemClick(curIndex.value);
-    } else {
-      alert("未找到相关诗歌");
+  }
+>>>>>>> 142897f0e70019155b906e9734738a665ae61012
+};
+
+const handlePoetryError = (event, error) => {
+  console.error("获取诗歌数据失败:", error);
+  isLoading.value = false;
+};
+
+const handlePoemClick = (index) => {
+  console.log(index);
+  setCurIndex(index);
+  curPoetry.value = poetryList.value[index];
+  // 仅在点击时调用滚动方法
+  nextTick(() => {
+    scrollToCurrentIndex();
+  });
+};
+
+const search = () => {};
+const loadMore = () => {
+  page.value++;
+  fetchPoetrys();
+};
+
+// 添加滚动事件处理函数
+const handleScroll = () => {
+  const container = poemsLeftContent.value;
+  if (container) {
+    const { scrollTop, scrollHeight, clientHeight } = container;
+    // 当滚动到距离底部 50px 时，触发加载更多
+    if (scrollTop + clientHeight >= scrollHeight - 50 && !isLoading.value) {
+      loadMore();
     }
   }
 };
