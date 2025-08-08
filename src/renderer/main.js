@@ -5,6 +5,9 @@ import "./assets/styles/global.css";
 import "./assets/styles/iconfont/iconfont.css";
 //Router
 import { router } from "./route/router";
+import VueVirtualScroller from "vue-virtual-scroller";
+import "vue-virtual-scroller/dist/vue-virtual-scroller.css";
+
 //LazyLoad
 import VueLazyLoad from "vue3-lazyload";
 import { createPinia } from "pinia";
@@ -26,6 +29,7 @@ app.config.errorHandler = (err, vm, info) => {
 };
 
 app
+  .use(VueVirtualScroller)
   .use(pinia)
   .use(router)
   .use(VueLazyLoad, {

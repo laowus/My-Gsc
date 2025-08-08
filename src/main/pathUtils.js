@@ -1,5 +1,5 @@
 const { app } = require("electron");
-let path = require("path");
+const path = require("path");
 const isDevEnv = process.env["NODE_ENV"] === "dev";
 
 let publicDir = path.join(__dirname, "../../public");
@@ -18,5 +18,5 @@ module.exports = {
   publicDir,
   dbZipPath,
   dbDir,
-  dbPath,
+  dbPath
 };

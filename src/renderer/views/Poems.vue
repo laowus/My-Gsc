@@ -7,13 +7,12 @@ import Writer from "../model/Writer";
 import KindIcon from "../components/KindIcon.vue";
 import PoetryDetail from "../components/poetryDetail.vue";
 import { useAppStore } from "../store/appStore";
+import { RecycleScroller } from "vue-virtual-scroller";
+const scrollerRef = ref(null);
 const { setCurIndex } = useAppStore();
 const { curIndex } = storeToRefs(useAppStore());
 const curPoetry = ref(null);
 const poetryList = ref([]);
-const isLoading = ref(true); // 添加加载状态
-const poemsLeftContent = ref(null);
-const poemItems = ref([]);
 
 const fetchPoetrys = async () => {
   try {
@@ -32,36 +31,21 @@ const fetchPoetrys = async () => {
     }); // 使用异步方法
   } catch (error) {
     console.error("获取诗歌数据失败:", error);
-  } finally {
-    isLoading.value = false; // 加载完成
-    // 在数据加载完成后调用滚动方法
-    nextTick(() => {
-      scrollToCurrentIndex();
-    });
   }
 };
-onMounted(() => {
-  fetchPoetrys();
+onMounted(async () => {
+  await fetchPoetrys();
+  nextTick(() => {
+    if (scrollerRef.value) {
+      scrollerRef.value.scrollToItem(curIndex.value);
+    }
+  });
 });
 
 const handlePoemClick = (index) => {
   console.log(index);
   curIndex.value = index;
   curPoetry.value = poetryList.value[index];
-  // 在点击时调用滚动方法
-  nextTick(() => {
-    scrollToCurrentIndex();
-  });
-};
-
-const scrollToCurrentIndex = () => {
-  if (poemsLeftContent.value && poemItems.value[curIndex.value]) {
-    console.log(poemItems.value[curIndex.value]);
-    poemItems.value[curIndex.value].scrollIntoView({
-      behavior: "smooth",
-      block: "nearest"
-    });
-  }
 };
 
 const search = () => {
@@ -80,14 +64,6 @@ const search = () => {
 };
 </script>
 <template>
-  <div v-if="isLoading" class="modal-overlay">
-    <div class="loading">
-      <div class="progress-bar">
-        <div class="progress"></div>
-      </div>
-      <div>加载中，请稍候...</div>
-    </div>
-  </div>
   <div class="poems">
     <div class="poems-left">
       <div class="top-bar">
@@ -99,14 +75,14 @@ const search = () => {
           <span class="iconfont icon-jia" style="font-size: 30px"></span>
         </button>
       </div>
-      <div class="poems-left-content" ref="poemsLeftContent">
-        <div>
-          <div v-for="(item, index) in poetryList" :key="item.poetryid" class="poem-item" @click="handlePoemClick(index)" :class="{ pselected: index === curIndex }" ref="poemItems">
-            <div class="poem-item-title">{{ index + 1 }} 、{{ item.title }}</div>
+      <div class="poems-left-content">
+        <RecycleScroller ref="scrollerRef" class="scroller" :items="poetryList" :item-size="120" key-field="poetryid" v-slot="{ item, index }">
+          <div class="poem-item" :class="{ pselected: index === curIndex }" @click="handlePoemClick(index)">
+            <div class="poem-item-title">{{ item.poetryid }} 、{{ item.title }}</div>
             <div class="poem-item-writer"><KindIcon :kindid="item.kindid" />[{{ item.writer.dynastyname }}] {{ item.writer.writername }}</div>
             <div class="poem-item-content" v-html="item.content.slice(0, 50) + (item.content.length > 50 ? '...' : '')"></div>
           </div>
-        </div>
+        </RecycleScroller>
       </div>
     </div>
     <div class="poem-right" v-if="curPoetry">
@@ -115,22 +91,29 @@ const search = () => {
   </div>
 </template>
 <style>
+.scroller {
+  height: 92vh;
+}
+
 .poems-left-content {
   margin-top: 10px;
   flex: 1;
   overflow-y: auto;
+  gap: 10px;
 }
 .poem-item {
-  padding: 10px;
-  margin: 10px;
-  gap: 10px;
+  padding: 5px;
+  margin: 5px;
+  gap: 5px;
   background-color: #ffffff;
   border-radius: 12px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   border: 1px solid #e0e0e0;
+  height: 100px;
 }
 
 .poem-item:hover {
@@ -140,7 +123,7 @@ const search = () => {
   cursor: pointer;
 }
 .pselected {
-  background-color: #ccc875;
+  background-color: #ccc875 !important;
 }
 .poem-item-title {
   font-size: 16px;

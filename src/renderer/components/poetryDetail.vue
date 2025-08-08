@@ -80,8 +80,8 @@ watch(
 .poem-detail {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  margin-top: 30px;
+  gap: 10px;
+  padding-top: 30px;
   width: 80%;
   margin: auto;
 }

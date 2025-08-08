@@ -8,7 +8,11 @@ import maxMinCancel from "./components/maxMinClose.vue";
     <leftMenu></leftMenu>
     <div class="content">
       <maxMinCancel></maxMinCancel>
-      <router-view></router-view>
+      <router-view v-slot="{ Component }">
+        <keep-alive>
+          <component :is="Component" />
+        </keep-alive>
+      </router-view>
     </div>
   </div>
 </template>
