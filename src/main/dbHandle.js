@@ -1,5 +1,5 @@
 const { ipcMain } = require("electron");
-const { getAllPoetry, getPoetryByid, getInfoList, getCountByKeyword } = require("./dbtool");
+const { getAllPoetry, getPoetryByid, getInfoList, getCountByKeyword, getWritersByDid } = require("./dbtool");
 
 const dbHandle = () => {
   ipcMain.handle("db-get-all-poetry", (event, keyword) => {
@@ -45,6 +45,19 @@ const dbHandle = () => {
           resolve(result);
         } else {
           reject(new Error("获取诗歌数量失败"));
+        }
+      });
+    });
+  });
+
+  //根据朝代id获取作者列表
+  ipcMain.handle("db-get-writers-by-did", async (event, dynastyid) => {
+    return new Promise((resolve, reject) => {
+      getWritersByDid(dynastyid, (result) => {
+        if (result.success) {
+          resolve(result);
+        } else {
+          reject(new Error("获取作者列表失败"));
         }
       });
     });

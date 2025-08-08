@@ -9,11 +9,11 @@ import Home from "../views/Home.vue";
 const routes = [
   {
     //默认
-    path: "/",
+    path: "/poems",
     component: Poems
   },
   {
-    path: "/writers",
+    path: "/",
     component: Writers
   },
   {

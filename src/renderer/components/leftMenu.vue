@@ -3,7 +3,7 @@ import { ref } from "vue";
 import { useRouter } from "vue-router";
 const router = useRouter();
 
-const index = ref(0);
+const index = ref(1);
 const menuList = ref([
   {
     name: "诗词",

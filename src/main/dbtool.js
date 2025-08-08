@@ -120,6 +120,25 @@ const getPoetryCount = (callback) => {
   });
 };
 
+const getWritersByDid = (dynastyid, callback) => {
+  let sql = `SELECT * FROM Writer `;
+  console.log(dynastyid);
+
+  if (dynastyid > 0) {
+    sql = sql + ` where dynastyid=${dynastyid}`;
+  }
+  console.log(sql);
+
+  db.all(sql, (err, rows) => {
+    if (err) {
+      console.error(err.message);
+      callback({ success: false });
+    } else {
+      callback({ success: true, data: rows });
+    }
+  });
+};
+
 // 导出批量更新函数
 module.exports = {
   initDatabase,
@@ -127,5 +146,6 @@ module.exports = {
   getPoetryByid,
   getInfoList,
   getPoetryCount,
-  getCountByKeyword
+  getCountByKeyword,
+  getWritersByDid
 };
