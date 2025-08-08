@@ -21,8 +21,7 @@
     "vue": "^3.2.25",
     "vue-router": "^4.0.14",
     "vue-virtual-scroller": "^2.0.0-beta.8",
-    "vue3-lazyload": "^0.3.6",
-    "vue3-masonry-plus": "^1.2.5"
+    "vue3-lazyload": "^0.3.6"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2.3",
