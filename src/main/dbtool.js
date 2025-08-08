@@ -46,21 +46,38 @@ const initDatabase = async () => {
     });
   });
 };
+//过滤关键字
+const getAllPoetry = (keyword, callback) => {
+  let sql = ` select p.poetryid, p.kindid, p.typeid,w.dynastyid,w.writerid,w.writername,p.title, p.content from Poetry p join Writer w on p.writerid = w.writerid`;
+  if (keyword !== "") {
+    sql = sql + ` where p.title LIKE '%${keyword}%' OR w.writername LIKE '%${keyword}%' OR p.content LIKE '%${keyword}%'`;
+  }
+  console.log("getAllPoetry", sql);
 
-const getAllPoetry = (callback) => {
-  db.all(
-    ` select p.poetryid, p.kindid, p.typeid,w.dynastyid,w.writerid,w.writername,p.title, p.content 
-    from Poetry p
-    join Writer w on p.writerid = w.writerid `,
-    (err, rows) => {
-      if (err) {
-        console.error(err.message);
-        callback({ success: false });
-      } else {
-        callback({ success: true, data: rows });
-      }
+  db.all(sql, (err, rows) => {
+    if (err) {
+      console.error(err.message);
+      callback({ success: false });
+    } else {
+      callback({ success: true, data: rows });
     }
-  );
+  });
+};
+
+//根据关键字获取诗歌数量
+
+const getCountByKeyword = (keyword, callback) => {
+  const sql = ` select COUNT(*) as count from Poetry p join Writer w on p.writerid = w.writerid where p.title LIKE '%${keyword}%' OR w.writername LIKE '%${keyword}%' OR p.content LIKE '%${keyword}%'`;
+  console.log("getCountByKeyword", sql);
+  // 移除多余的 keyword 参数
+  db.get(sql, (err, row) => {
+    if (err) {
+      console.error(err.message);
+      callback({ success: false });
+    } else {
+      callback({ success: true, data: row.count });
+    }
+  });
 };
 
 const getPoetryByid = (poetryid, callback) => {
@@ -92,25 +109,6 @@ const getInfoList = (cateid, id, callback) => {
   });
 };
 
-const getPoetryByPage = (page, pageSize, callback) => {
-  const offset = (page - 1) * pageSize;
-  db.all(
-    ` SELECT p.poetryid, p.kindid, p.typeid, w.dynastyid, w.writerid, w.writername, p.title, p.content 
-      FROM Poetry p
-      JOIN Writer w ON p.writerid = w.writerid 
-      LIMIT ? OFFSET ?`,
-    [pageSize, offset],
-    (err, rows) => {
-      if (err) {
-        console.error(err.message);
-        callback({ success: false });
-      } else {
-        callback({ success: true, data: rows });
-      }
-    }
-  );
-};
-
 const getPoetryCount = (callback) => {
   db.get(`SELECT COUNT(*) as count FROM Poetry`, (err, row) => {
     if (err) {
@@ -128,6 +126,6 @@ module.exports = {
   getAllPoetry,
   getPoetryByid,
   getInfoList,
-  getPoetryByPage,
-  getPoetryCount
+  getPoetryCount,
+  getCountByKeyword
 };

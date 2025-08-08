@@ -1,75 +1,53 @@
 const { ipcMain } = require("electron");
-const { getAllPoetry, getPoetryByid, getInfoList, getPoetryByPage, getPoetryCount } = require("./dbtool");
+const { getAllPoetry, getPoetryByid, getInfoList, getCountByKeyword } = require("./dbtool");
 
 const dbHandle = () => {
-  ipcMain.on("db-get-all-poetry", async (event) => {
-    try {
-      getAllPoetry((result) => {
+  ipcMain.handle("db-get-all-poetry", (event, keyword) => {
+    return new Promise((resolve, reject) => {
+      getAllPoetry(keyword, (result) => {
         if (result.success) {
-          event.sender.send("db-get-all-poetry-reply", result);
+          resolve(result);
         } else {
-          event.sender.send("db-get-all-poetry-error", new Error("获取诗歌数据失败"));
+          reject(new Error("获取诗歌数据失败"));
         }
       });
-    } catch (error) {
-      event.sender.send("db-get-all-poetry-error", error);
-    }
+    });
   });
 
-  ipcMain.on("db-get-poetry-by-id", async (event, poetryid) => {
-    try {
+  ipcMain.handle("db-get-poetry-by-id", async (event, poetryid) => {
+    return new Promise((resolve, reject) => {
       getPoetryByid(poetryid, (result) => {
         if (result.success) {
-          event.sender.send("db-get-poetry-by-id-reply", result);
+          resolve(result);
         } else {
-          event.sender.send("db-get-poetry-by-id-error", new Error("获取诗歌数据失败"));
+          reject(new Error("获取诗歌数据失败"));
         }
       });
-    } catch (error) {
-      event.sender.send("db-get-poetry-by-id-error", error);
-    }
+    });
   });
 
-  ipcMain.on("db-get-info-list", async (event, cateid, id) => {
-    try {
+  ipcMain.handle("db-get-info-list", async (event, cateid, id) => {
+    return new Promise((resolve, reject) => {
       getInfoList(cateid, id, (result) => {
         if (result.success) {
-          event.sender.send("db-get-info-list-reply", result);
+          resolve(result);
         } else {
-          event.sender.send("db-get-info-list-error", new Error("获取信息数据失败"));
+          reject(new Error("获取信息数据失败"));
         }
       });
-    } catch (error) {
-      event.sender.send("db-get-info-list-error", error);
-    }
+    });
   });
-
-  ipcMain.on("db-get-poetry-by-page", async (event, { page, pageSize }) => {
-    try {
-      getPoetryByPage(page, pageSize, (result) => {
+  //根据关键字获取诗歌数量
+  ipcMain.handle("db-get-count-by-keyword", async (event, keyword) => {
+    return new Promise((resolve, reject) => {
+      getCountByKeyword(keyword, (result) => {
         if (result.success) {
-          event.sender.send("db-get-poetry-by-page-reply", result);
+          resolve(result);
         } else {
-          event.sender.send("db-get-poetry-by-page-error", new Error("分页获取诗歌数据失败"));
+          reject(new Error("获取诗歌数量失败"));
         }
       });
-    } catch (error) {
-      event.sender.send("db-get-poetry-by-page-error", error);
-    }
-  });
-
-  ipcMain.on("db-get-poetry-count", async (event) => {
-    try {
-      getPoetryCount((result) => {
-        if (result.success) {
-          event.sender.send("db-get-poetry-count-reply", result);
-        } else {
-          event.sender.send("db-get-poetry-count-error", new Error("获取诗歌总数失败"));
-        }
-      });
-    } catch (error) {
-      event.sender.send("db-get-poetry-count-error", error);
-    }
+    });
   });
 };
 

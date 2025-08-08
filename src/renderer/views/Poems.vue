@@ -1,156 +1,83 @@
 <script setup>
-const { ipcRenderer } = window.require("electron");
-import { ref, watch, reactive, onMounted, nextTick, onUnmounted } from "vue";
-
+import { ref, onMounted, nextTick } from "vue";
 import { storeToRefs } from "pinia";
 import Poetry from "../model/Poetry";
 import Writer from "../model/Writer";
 import KindIcon from "../components/KindIcon.vue";
 import PoetryDetail from "../components/poetryDetail.vue";
 import { useAppStore } from "../store/appStore";
-import { RecycleScroller } from "vue-virtual-scroller";
+const { ipcRenderer } = window.require("electron");
+
 const scrollerRef = ref(null);
-const { setCurIndex } = useAppStore();
-const { curIndex } = storeToRefs(useAppStore());
+const { setCurIndex, setKeyword } = useAppStore();
+const { curIndex, keyword } = storeToRefs(useAppStore());
+
 const curPoetry = ref(null);
 const poetryList = ref([]);
-<<<<<<< HEAD
-=======
-const isLoading = ref(true); // 添加加载状态
-const poemsLeftContent = ref(null);
-const poemItems = ref([]);
-const page = ref(1);
-const pageSize = ref(20);
-const totalPoetry = ref(0);
->>>>>>> 142897f0e70019155b906e9734738a665ae61012
 
-// 新增：存储需要定位的索引
-const targetIndex = ref(curIndex.value);
-
-const fetchPoetrys = () => {
+const fetchPoetrys = async () => {
   try {
-    isLoading.value = true;
-    // 新增：获取总数据量
-    ipcRenderer.send("db-get-poetry-count");
-    // 新增：处理获取总数据量的回复
-    ipcRenderer.on("db-get-poetry-count-reply", (event, res) => {
+    await ipcRenderer.invoke("db-get-all-poetry", keyword.value).then((res) => {
       if (res.success) {
-        totalPoetry.value = res.data;
+        poetryList.value = res.data.map((item) => {
+          const writer = new Writer(item.writerid, item.writername, item.dynastyid);
+          return new Poetry(item.poetryid, item.typeid, item.kindid, writer, item.title, item.content, item.infos);
+        });
+        console.log(poetryList.value.length);
+        if (curIndex.value > poetryList.value.length) {
+          setCurIndex(0);
+        }
+        if (poetryList.value.length > 0) {
+          curPoetry.value = poetryList.value[curIndex.value];
+          console.log("curPoetry.value", curPoetry.value);
+        }
+      } else {
       }
     });
-
-    ipcRenderer.send("db-get-poetry-by-page", { page: page.value, pageSize: pageSize.value });
   } catch (error) {
     console.error("获取诗歌数据失败:", error);
   }
 };
-<<<<<<< HEAD
+
 onMounted(async () => {
   await fetchPoetrys();
-  nextTick(() => {
-    if (scrollerRef.value) {
-      scrollerRef.value.scrollToItem(curIndex.value);
-    }
-  });
+  nextTick(() => handleScroll());
 });
 
-const handlePoemClick = (index) => {
-  console.log(index);
-  curIndex.value = index;
-  curPoetry.value = poetryList.value[index];
-=======
-
-// 新增：标记是否是首次加载数据
-const isFirstLoad = ref(true);
-
-// 修改：处理数据加载完成后的逻辑
-const handlePoetryReply = (event, res) => {
-  if (res.success) {
-    // 追加数据而非覆盖
-    poetryList.value = [
-      ...poetryList.value,
-      ...res.data.map((item) => {
-        const writer = new Writer(item.writerid, item.writername, item.dynastyid);
-        return new Poetry(item.poetryid, item.typeid, item.kindid, writer, item.title, item.content, item.infos);
-      })
-    ];
-
-    // 仅在首次加载时检查是否加载到目标索引
-    if (isFirstLoad.value && poetryList.value.length > targetIndex.value) {
-      curIndex.value = targetIndex.value;
-      curPoetry.value = poetryList.value[curIndex.value];
-      nextTick(() => {
-        scrollToCurrentIndex();
-      });
-      isFirstLoad.value = false;
-    } else if (!isLoading.value && poetryList.value.length < totalPoetry.value) {
-      // 如果还没加载完所有数据，继续加载下一页
-      loadMore();
-    }
+const handleScroll = () => {
+  if (scrollerRef.value) {
+    console.log("滚动到", curIndex.value);
+    scrollerRef.value.scrollToItem(curIndex.value);
   }
-  isLoading.value = false;
-};
-
-onMounted(() => {
-  // 计算需要加载的起始页码
-  const startPage = Math.floor(targetIndex.value / pageSize.value) + 1;
-  page.value = startPage;
-  fetchPoetrys();
-  ipcRenderer.on("db-get-poetry-by-page-reply", handlePoetryReply);
-  ipcRenderer.on("db-get-poetry-by-page-error", handlePoetryError);
-  // 添加滚动事件监听
-  poemsLeftContent.value?.addEventListener("scroll", handleScroll);
-});
-
-onUnmounted(() => {
-  ipcRenderer.removeListener("db-get-poetry-by-page-reply", handlePoetryReply);
-  ipcRenderer.removeListener("db-get-poetry-by-page-error", handlePoetryError);
-  // 移除滚动事件监听
-  poemsLeftContent.value?.removeEventListener("scroll", handleScroll);
-});
-
-const scrollToCurrentIndex = () => {
-  if (poemsLeftContent.value && poemItems.value[curIndex.value]) {
-    console.log(poemItems.value[curIndex.value]);
-    poemItems.value[curIndex.value].scrollIntoView({
-      behavior: "smooth",
-      block: "nearest"
-    });
-  }
->>>>>>> 142897f0e70019155b906e9734738a665ae61012
-};
-
-const handlePoetryError = (event, error) => {
-  console.error("获取诗歌数据失败:", error);
-  isLoading.value = false;
 };
 
 const handlePoemClick = (index) => {
   console.log(index);
   setCurIndex(index);
   curPoetry.value = poetryList.value[index];
-  // 仅在点击时调用滚动方法
-  nextTick(() => {
-    scrollToCurrentIndex();
-  });
 };
 
-const search = () => {};
-const loadMore = () => {
-  page.value++;
-  fetchPoetrys();
-};
-
-// 添加滚动事件处理函数
-const handleScroll = () => {
-  const container = poemsLeftContent.value;
-  if (container) {
-    const { scrollTop, scrollHeight, clientHeight } = container;
-    // 当滚动到距离底部 50px 时，触发加载更多
-    if (scrollTop + clientHeight >= scrollHeight - 50 && !isLoading.value) {
-      loadMore();
+const search = () => {
+  const _keyword = document.querySelector(".search-input").value.trim();
+  //去数据库哪里获取值,如果没有就提示,不保存
+  ipcRenderer.invoke("db-get-count-by-keyword", _keyword).then((res) => {
+    if (res.success) {
+      console.log("getCountByKeyword", res);
+      if (res.data > 0) {
+        setKeyword(_keyword);
+        setCurIndex(0);
+        fetchPoetrys();
+        handleScroll();
+      } else {
+        alert(`关键字: [${_keyword}] 没有符合条件的诗歌,请重新输入`);
+        document.querySelector(".search-input").value = keyword.value;
+        return;
+      }
+    } else {
+      alert("获取诗歌数量失败");
+      return;
     }
-  }
+  });
 };
 </script>
 <template>
@@ -159,16 +86,17 @@ const handleScroll = () => {
       <div class="top-bar">
         <div class="search">
           <span class="iconfont icon-sousuobeifen2"></span>
-          <input type="text" placeholder="输入关键字" class="searche-input" />
+          <input type="text" placeholder="输入关键字" class="search-input" :value="keyword" />
+          <span class="title-count">( {{ curIndex + 1 }}/ {{ poetryList.length }})</span>
         </div>
         <button class="icon-btn" @click="search">
           <span class="iconfont icon-jia" style="font-size: 30px"></span>
         </button>
       </div>
-      <div class="poems-left-content">
+      <div class="poems-left-content" v-if="poetryList.length > 0">
         <RecycleScroller ref="scrollerRef" class="scroller" :items="poetryList" :item-size="120" key-field="poetryid" v-slot="{ item, index }">
           <div class="poem-item" :class="{ pselected: index === curIndex }" @click="handlePoemClick(index)">
-            <div class="poem-item-title">{{ item.poetryid }} 、{{ item.title }}</div>
+            <div class="poem-item-title">{{ index + 1 }} 、{{ item.title }}</div>
             <div class="poem-item-writer"><KindIcon :kindid="item.kindid" />[{{ item.writer.dynastyname }}] {{ item.writer.writername }}</div>
             <div class="poem-item-content" v-html="item.content.slice(0, 50) + (item.content.length > 50 ? '...' : '')"></div>
           </div>
@@ -280,18 +208,26 @@ const handleScroll = () => {
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   border: 1px solid #ccc;
   border-radius: 5px;
   margin-left: 5px;
   background-color: white;
 }
 
-.searche-input {
+.search-input {
   width: 100%;
   flex: 1;
   padding: 5px;
 }
+
+.title-count {
+  font-size: 12px;
+  color: #7f8c8d;
+  margin-right: 5px;
+  font-weight: bold;
+}
+
 .modal-overlay {
   position: fixed;
   top: 0;

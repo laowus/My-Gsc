@@ -1,10 +1,11 @@
 <script setup>
-import { watch, onMounted, ref,onUnmounted  } from "vue";
+import { watch, onMounted, ref } from "vue";
+
 import KindIcon from "./KindIcon.vue";
 import Writer from "../model/Writer";
 import Poetry from "../model/Poetry";
-const { ipcRenderer } = window.require("electron");
 
+const { ipcRenderer } = window.require("electron");
 const props = defineProps({
   poetryid: {
     type: Number,
@@ -17,64 +18,37 @@ const curInfoIndex = ref(0);
 
 const getPoetryDetail = () => {
   try {
-    ipcRenderer.send("db-get-poetry-by-id", props.poetryid);
+    ipcRenderer.invoke("db-get-poetry-by-id", props.poetryid).then((res) => {
+      if (res.success) {
+        const data = res.data;
+        const writer = new Writer(data.writerid, data.writername, data.dynastyid);
+        data.content = data.content.replace(/\(/g, "<br> (");
+        curPoetry.value = new Poetry(data.poetryid, data.typeid, data.kindid, writer, data.title, data.content, data.infos);
+        if (curPoetry.value) {
+          console.log("获取infolst");
+          getInfoList();
+        }
+      }
+    }); // 使用异步方法
   } catch (error) {
-    console.error("获取诗歌详情失败:", error);
+    console.error("获取诗歌数据失败:", error);
   }
 };
 
 const getInfoList = () => {
   try {
-    ipcRenderer.send("db-get-info-list", 1, props.poetryid);
+    ipcRenderer.invoke("db-get-info-list", 1, props.poetryid).then((res) => {
+      if (res.success) {
+        curInfoList.value = res.data;
+      }
+    });
   } catch (error) {
     console.error("获取信息列表失败:", error);
   }
 };
 
-// 添加响应监听
-const handlePoetryDetailReply = (event, res) => {
-  if (res.success) {
-    const data = res.data;
-    const writer = new Writer(data.writerid, data.writername, data.dynastyid);
-    data.content = data.content.replace(/\(/g, "<br> (");
-    curPoetry.value = new Poetry(data.poetryid, data.typeid, data.kindid, writer, data.title, data.content);
-    if (curPoetry.value) {
-      console.log("获取infolst");
-      getInfoList();
-    }
-  }
-};
-
-const handleInfoListReply = (event, res) => {
-  if (res.success) {
-    console.log("获取infolst成功");
-    curInfoList.value = res.data;
-    console.log(curInfoList.value);
-  }
-};
-
-const handlePoetryDetailError = (event, error) => {
-  console.error("获取诗歌详情失败:", error);
-};
-
-const handleInfoListError = (event, error) => {
-  console.error("获取信息列表失败:", error);
-};
-
 onMounted(() => {
   getPoetryDetail();
-  ipcRenderer.on("db-get-poetry-by-id-reply", handlePoetryDetailReply);
-  ipcRenderer.on("db-get-info-list-reply", handleInfoListReply);
-  ipcRenderer.on("db-get-poetry-by-id-error", handlePoetryDetailError);
-  ipcRenderer.on("db-get-info-list-error", handleInfoListError);
-});
-
-// 组件卸载时移除监听，防止内存泄漏
-onUnmounted(() => {
-  ipcRenderer.removeListener("db-get-poetry-by-id-reply", handlePoetryDetailReply);
-  ipcRenderer.removeListener("db-get-info-list-reply", handleInfoListReply);
-  ipcRenderer.removeListener("db-get-poetry-by-id-error", handlePoetryDetailError);
-  ipcRenderer.removeListener("db-get-info-list-error", handleInfoListError);
 });
 
 watch(

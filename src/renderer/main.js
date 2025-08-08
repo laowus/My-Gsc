@@ -12,8 +12,6 @@ import "vue-virtual-scroller/dist/vue-virtual-scroller.css";
 import VueLazyLoad from "vue3-lazyload";
 import { createPinia } from "pinia";
 import piniaPersist from "pinia-plugin-persist";
-import VueVirtualScroller from "vue-virtual-scroller";
-import "vue-virtual-scroller/dist/vue-virtual-scroller.css";
 
 //状态管理
 const pinia = createPinia();
@@ -33,7 +31,6 @@ app.config.errorHandler = (err, vm, info) => {
 app
   .use(VueVirtualScroller)
   .use(pinia)
-  .use(VueVirtualScroller)
   .use(router)
   .use(VueLazyLoad, {
     loading: "icon.png",
