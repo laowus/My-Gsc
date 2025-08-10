@@ -9,7 +9,7 @@ import maxMinCancel from "./components/maxMinClose.vue";
     <div class="content">
       <maxMinCancel></maxMinCancel>
       <router-view v-slot="{ Component }">
-        <keep-alive>
+        <keep-alive :include="['poetryList']">
           <component :is="Component" />
         </keep-alive>
       </router-view>
@@ -30,6 +30,7 @@ import maxMinCancel from "./components/maxMinClose.vue";
 }
 .content {
   flex: 1;
+  position: relative;
 }
 .item {
   margin-bottom: 20px;

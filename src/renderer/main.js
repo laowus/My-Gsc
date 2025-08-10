@@ -11,7 +11,6 @@ import "vue-virtual-scroller/dist/vue-virtual-scroller.css";
 import VueLazyLoad from "vue3-lazyload";
 import { createPinia } from "pinia";
 import piniaPersist from "pinia-plugin-persist";
-import WaterFall from "kuan-vue-waterfall";
 
 const pinia = createPinia();
 pinia.use(piniaPersist);
@@ -26,7 +25,6 @@ app.config.errorHandler = (err, vm, info) => {
   //暂时仅需捕获，以免程序崩溃，其他不用特别处理
   console.log(err, vm, info);
 };
-app.component("WaterFall", WaterFall);
 app
   .use(pinia)
   .use(router)

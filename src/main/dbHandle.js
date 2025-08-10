@@ -1,10 +1,10 @@
 const { ipcMain } = require("electron");
-const { getAllPoetry, getPoetryByid, getInfoList, getCountByKeyword, getWritersByDid } = require("./dbtool");
+const { getAllPoetry, getPoetryByid, getInfoList, getCountByKeyword, getWritersByDid, getTypesByPid } = require("./dbtool");
 
 const dbHandle = () => {
-  ipcMain.handle("db-get-all-poetry", (event, keyword) => {
+  ipcMain.handle("db-get-all-poetry", (event, params) => {
     return new Promise((resolve, reject) => {
-      getAllPoetry(keyword, (result) => {
+      getAllPoetry(params, (result) => {
         if (result.success) {
           resolve(result);
         } else {
@@ -54,6 +54,18 @@ const dbHandle = () => {
   ipcMain.handle("db-get-writers-by-did", async (event, dynastyid) => {
     return new Promise((resolve, reject) => {
       getWritersByDid(dynastyid, (result) => {
+        if (result.success) {
+          resolve(result);
+        } else {
+          reject(new Error("获取作者列表失败"));
+        }
+      });
+    });
+  });
+
+  ipcMain.handle("db-get-types-by-pid", async (event, pid) => {
+    return new Promise((resolve, reject) => {
+      getTypesByPid(pid, (result) => {
         if (result.success) {
           resolve(result);
         } else {

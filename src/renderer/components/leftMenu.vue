@@ -8,12 +8,12 @@ const menuList = ref([
   {
     name: "诗词",
     icon: "icon-huitu-poem",
-    path: "/"
+    path: "/poems"
   },
   {
     name: "诗人",
     icon: "icon-shiren1",
-    path: "/writers"
+    path: "/"
   },
   {
     name: "分类",

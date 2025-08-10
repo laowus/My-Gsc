@@ -17,7 +17,8 @@ const poetryList = ref([]);
 
 const fetchPoetrys = async () => {
   try {
-    await ipcRenderer.invoke("db-get-all-poetry", keyword.value).then((res) => {
+    await ipcRenderer.invoke("db-get-all-poetry", { ty: "keyword", v: keyword.value }).then((res) => {
+      console.log(res);
       if (res.success) {
         poetryList.value = res.data.map((item) => {
           const writer = new Writer(item.writerid, item.writername, item.dynastyid);
@@ -226,56 +227,5 @@ const search = () => {
   color: #7f8c8d;
   margin-right: 5px;
   font-weight: bold;
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 1000;
-}
-.loading {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 18px;
-  color: #2c3e50;
-  display: flex;
-  flex-direction: column;
-  background-color: white;
-  padding: 20px;
-  border-radius: 8px;
-  z-index: 1001;
-}
-
-.progress-bar {
-  width: 300px;
-  height: 5px;
-  background-color: #e0e0e0;
-  border-radius: 5px;
-}
-
-.progress {
-  height: 100%;
-  background-color: #42b983;
-  border-radius: 5px;
-  width: 0%;
-  animation: progress 1.5s infinite;
-}
-
-@keyframes progress {
-  0% {
-    width: 0%;
-  }
-  50% {
-    width: 100%;
-  }
-  100% {
-    width: 0%;
-  }
 }
 </style>

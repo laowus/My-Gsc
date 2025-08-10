@@ -47,11 +47,16 @@ const initDatabase = async () => {
   });
 };
 //过滤关键字
-const getAllPoetry = (keyword, callback) => {
+const getAllPoetry = (params, callback) => {
   let sql = ` select p.poetryid, p.kindid, p.typeid,w.dynastyid,w.writerid,w.writername,p.title, p.content from Poetry p join Writer w on p.writerid = w.writerid`;
-  if (keyword !== "") {
-    sql = sql + ` where p.title LIKE '%${keyword}%' OR w.writername LIKE '%${keyword}%' OR p.content LIKE '%${keyword}%'`;
+  if (params.ty == "keyword" && params.v !== "") {
+    console.log(params);
+    sql = sql + ` where p.title LIKE '%${params.v}%' OR w.writername LIKE '%${params.v}%' OR p.content LIKE '%${params.v}%'`;
   }
+  if (params.ty === "writer" && params.v > 0) {
+    sql = sql + ` where w.writerid = ${params.v}`;
+  }
+
   console.log("getAllPoetry", sql);
 
   db.all(sql, (err, rows) => {
@@ -139,6 +144,18 @@ const getWritersByDid = (dynastyid, callback) => {
   });
 };
 
+const getTypesByPid = (pid, callback) => {
+  const sql = `SELECT * FROM Type where parentid=${pid}`;
+  db.all(sql, (err, rows) => {
+    if (err) {
+      console.error(err.message);
+      callback({ success: false });
+    } else {
+      callback({ success: true, data: rows });
+    }
+  });
+};
+
 // 导出批量更新函数
 module.exports = {
   initDatabase,
@@ -147,5 +164,6 @@ module.exports = {
   getInfoList,
   getPoetryCount,
   getCountByKeyword,
-  getWritersByDid
+  getWritersByDid,
+  getTypesByPid
 };
