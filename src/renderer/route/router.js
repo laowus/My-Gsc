@@ -4,7 +4,7 @@ import Types from "../views/Types.vue";
 import Poems from "../views/Poems.vue";
 import My from "../views/My.vue";
 import Setting from "../views/Setting.vue";
-import Home from "../views/Home.vue";
+import PoetryList from "../views/PoetryList.vue";
 
 const routes = [
   {
@@ -31,6 +31,10 @@ const routes = [
   {
     path: "/setting",
     component: Setting
+  },
+  {
+    path: "/poetryList",
+    component: PoetryList
   }
 ];
 
