@@ -41,7 +41,7 @@ watch(curdid, async () => {
     </div>
     <div class="writers-right">
       <div class="horizontal-waterfall" v-if="writers.length > 0">
-        <div v-for="(item, index) in writers" :key="index" :style="{ backgroundColor: getColor(index) }" class="item" @click="router.push({ path: `/poetryList/`, query: { ty: 'writer', v: item.writerid } })">{{ item.writername }}</div>
+        <div v-for="(item, index) in writers" :key="index" :style="{ backgroundColor: getColor(index) }" class="item" @click="router.push({ path: `/poetryList/`, query: { ty: 'writer', v: item.writerid, n: item.writername } })">{{ item.writername }}</div>
       </div>
     </div>
   </div>

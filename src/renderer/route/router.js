@@ -5,36 +5,48 @@ import Poems from "../views/Poems.vue";
 import My from "../views/My.vue";
 import Setting from "../views/Setting.vue";
 import PoetryList from "../components/PoetryList.vue";
+import ShowWriter from "../components/showWriter.vue";
 
 const routes = [
   {
-    //默认
-    path: "/poems",
-    component: Poems
-  },
-  {
+    name: "首页",
     path: "/",
-    component: Writers
-  },
-  {
-    path: "/types",
     component: Types
   },
   {
+    name: "诗词",
     path: "/poems",
     component: Poems
   },
   {
+    name: "诗人",
+    path: "/writers",
+    component: Writers
+  },
+  {
+    name: "分类",
+    path: "/types",
+    component: Types
+  },
+
+  {
+    name: "我的",
     path: "/my",
     component: My
   },
   {
+    name: "设置",
     path: "/setting",
     component: Setting
   },
   {
     path: "/poetryList",
     component: PoetryList
+  },
+  {
+    name: "作者详情",
+    path: "/showWriter",
+    component: ShowWriter
   }
 ];
 

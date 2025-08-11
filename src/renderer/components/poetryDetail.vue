@@ -88,8 +88,7 @@ watch(
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding-top: 30px;
-  width: 80%;
+  padding: 30px;
   margin: auto;
 }
 

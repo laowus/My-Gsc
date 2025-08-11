@@ -57,6 +57,10 @@ const getAllPoetry = (params, callback) => {
     sql = sql + ` where w.writerid = ${params.v}`;
   }
 
+  if (params.ty === "type" && params.v > 0) {
+    sql = sql + ` where p.typeid LIKE '${params.v},%' OR p.typeid LIKE '%,${params.v},%' OR p.typeid LIKE '%,${params.v}' OR p.typeid = '${params.v}'`;
+  }
+
   console.log("getAllPoetry", sql);
 
   db.all(sql, (err, rows) => {

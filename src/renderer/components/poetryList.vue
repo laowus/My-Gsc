@@ -14,6 +14,7 @@ const params = ref(route.query);
 const poetryList = ref([]);
 const curPoetry = ref(null);
 const curIndex = ref(0);
+const curName = ref("");
 
 const fetchPoetrys = async () => {
   try {
@@ -26,6 +27,7 @@ const fetchPoetrys = async () => {
           return new Poetry(item.poetryid, item.typeid, item.kindid, writer, item.title, item.content, item.infos);
         });
         if (poetryList.value.length > 0) {
+          curName.value = params.value.n;
           curPoetry.value = poetryList.value[curIndex.value];
           console.log("curPoetry.value", curPoetry.value);
         }
@@ -66,6 +68,7 @@ const goBack = () => {
     <div class="poetrys-left">
       <div class="return" @click="goBack">
         <i class="iconfont icon-fanhui"></i>
+        <div class="info">[ {{ curName }} ] ( {{ curIndex + 1 }} /{{ poetryList.length }} )</div>
       </div>
       <div class="poetrys-left-content" v-if="poetryList.length > 0">
         <RecycleScroller class="scroller" :items="poetryList" :item-size="120" key-field="poetryid" v-slot="{ item, index }">
@@ -87,6 +90,15 @@ const goBack = () => {
 .return {
   padding: 10px;
   cursor: pointer;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 20px;
+}
+.info {
+  font-size: 16px;
+  font-weight: 700;
+  color: #2c3e50;
 }
 
 .scroller {
