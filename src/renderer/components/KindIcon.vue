@@ -3,7 +3,7 @@ const props = defineProps({
   kindid: Number
 });
 
-const kinds = ["诗", "词", "曲", "文"];
+const kinds = ["诗", "词", "曲", "文", "辞"];
 </script>
 
 <template>
@@ -40,5 +40,8 @@ const kinds = ["诗", "词", "曲", "文"];
 
 .type-4 {
   background-color: #ff9933; /* 文的颜色，加深 */
+}
+.type-5 {
+  background-color: #000000; /* 辞的颜色，加深 */
 }
 </style>

@@ -4,7 +4,9 @@ export const useAppStore = defineStore("appStore", {
   state: () => ({
     //当前选中的索引
     curIndex: 0,
-    keyword: ""
+    keyword: "",
+    curRhIndex: 0,
+    rhkeyword: ""
   }),
   getters: {},
   actions: {
@@ -13,6 +15,12 @@ export const useAppStore = defineStore("appStore", {
     },
     setKeyword(keyword) {
       this.keyword = keyword;
+    },
+    setCurRhIndex(index) {
+      this.curRhIndex = index;
+    },
+    setRhkeyword(keyword) {
+      this.rhkeyword = keyword;
     }
   },
   persist: {
@@ -20,7 +28,7 @@ export const useAppStore = defineStore("appStore", {
     strategies: [
       {
         storage: localStorage,
-        paths: ["curIndex", "keyword"]
+        paths: ["curIndex", "keyword", "curRhIndex", "rhkeyword"]
       }
     ]
   }

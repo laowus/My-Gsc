@@ -3,7 +3,7 @@ import { ref } from "vue";
 import { useRouter } from "vue-router";
 const router = useRouter();
 
-const index = ref(2);
+const index = ref(3);
 const menuList = ref([
   {
     name: "诗词",
@@ -19,6 +19,11 @@ const menuList = ref([
     name: "分类",
     icon: "icon-fenlei",
     path: "/types"
+  },
+  {
+    name: "名句",
+    icon: "icon-mingci",
+    path: "/rhesis"
   },
   {
     name: "设置",

@@ -5,13 +5,14 @@ import Poems from "../views/Poems.vue";
 import My from "../views/My.vue";
 import Setting from "../views/Setting.vue";
 import PoetryList from "../components/PoetryList.vue";
-import ShowWriter from "../components/showWriter.vue";
+import writerDetail from "../components/writerDetail.vue";
+import Rhesis from "../views/Rhesis.vue";
 
 const routes = [
   {
     name: "首页",
     path: "/",
-    component: Types
+    component: Rhesis
   },
   {
     name: "诗词",
@@ -28,7 +29,11 @@ const routes = [
     path: "/types",
     component: Types
   },
-
+  {
+    name: "名句",
+    path: "/rhesis",
+    component: Rhesis
+  },
   {
     name: "我的",
     path: "/my",
@@ -45,8 +50,9 @@ const routes = [
   },
   {
     name: "作者详情",
-    path: "/showWriter",
-    component: ShowWriter
+    path: "/writerDetail/:id",
+
+    component: writerDetail
   }
 ];
 

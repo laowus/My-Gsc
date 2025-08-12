@@ -160,6 +160,31 @@ const getTypesByPid = (pid, callback) => {
   });
 };
 
+const getWritersById = (writerid, callback) => {
+  const sql = `SELECT * FROM Writer where writerid=${writerid}`;
+  db.get(sql, (err, row) => {
+    if (err) {
+      console.error(err.message);
+      callback({ success: false });
+    } else {
+      callback({ success: true, data: row });
+    }
+  });
+};
+
+const getRhesis = (callback) => {
+  const sql = `SELECT r.rhesisid, r.rcontent, p.poetryid, p.kindid, p.title, w.writername, w.dynastyid FROM rhesis r join poetry p on r.poetryid=p.poetryid inner join writer w on p.writerid=w.writerid order by r.rhesisid asc `;
+
+  db.all(sql, (err, rows) => {
+    if (err) {
+      console.error(err.message);
+      callback({ success: false });
+    } else {
+      callback({ success: true, data: rows });
+    }
+  });
+};
+
 // 导出批量更新函数
 module.exports = {
   initDatabase,
@@ -169,5 +194,7 @@ module.exports = {
   getPoetryCount,
   getCountByKeyword,
   getWritersByDid,
-  getTypesByPid
+  getTypesByPid,
+  getWritersById,
+  getRhesis
 };
