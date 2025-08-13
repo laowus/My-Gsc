@@ -61,6 +61,10 @@ const getAllPoetry = (params, callback) => {
     sql = sql + ` where p.typeid LIKE '${params.v},%' OR p.typeid LIKE '%,${params.v},%' OR p.typeid LIKE '%,${params.v}' OR p.typeid = '${params.v}'`;
   }
 
+  if (params.ty === "my" && params.v !== "") {
+    sql = sql + ` where p.poetryid IN (${params.v})`;
+  }
+
   console.log("getAllPoetry", sql);
 
   db.all(sql, (err, rows) => {
@@ -270,8 +274,8 @@ function changeMtid(poetryid, mtid) {
   });
 }
 
-const getMyList = (callback) => {
-  const sql = `SELECT mtid, GROUP_CONCAT(poetryid) as pids FROM My GROUP BY mtid`;
+const getMyList = (mtid, callback) => {
+  const sql = `SELECT poetryid from My where mtid=${mtid}`;
 
   console.log(sql);
   db.all(sql, (err, row) => {

@@ -12,7 +12,7 @@ const routes = [
   {
     name: "首页",
     path: "/",
-    component: Rhesis
+    component: My
   },
   {
     name: "诗词",
@@ -46,12 +46,12 @@ const routes = [
   },
   {
     path: "/poetryList",
-    component: PoetryList
+    component: PoetryList,
+    props: (route) => ({ params: route.query })
   },
   {
     name: "作者详情",
     path: "/writerDetail/:id",
-
     component: writerDetail
   }
 ];

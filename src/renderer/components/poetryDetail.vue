@@ -62,9 +62,9 @@ watch(
 </script>
 <template>
   <div class="poem-detail" v-if="curPoetry">
+    <myTypesList :poetryid="curPoetry.poetryid"></myTypesList>
     <div class="poem-title">
       {{ curPoetry.title }}
-      <myTypesList :poetryid="curPoetry.poetryid"></myTypesList>
     </div>
     <div class="poem-writer">
       <KindIcon :kindid="curPoetry.kindid" />
@@ -88,7 +88,7 @@ watch(
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 80px;
+  padding: 30px;
   margin: auto;
 }
 

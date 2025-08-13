@@ -7,7 +7,7 @@ import { useRouter } from "vue-router";
 import getColor from "../common/colorUtils";
 const router = useRouter();
 
-const curdid = ref(8);
+const curdid = ref(7);
 const writers = ref([]);
 const getWriters = async () => {
   try {

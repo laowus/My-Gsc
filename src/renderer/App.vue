@@ -9,7 +9,7 @@ import maxMinCancel from "./components/maxMinClose.vue";
     <div class="content">
       <maxMinCancel></maxMinCancel>
       <router-view v-slot="{ Component }">
-        <keep-alive :include="['poetryList']">
+        <keep-alive :include="['poetryList', 'my']">
           <component :is="Component" />
         </keep-alive>
       </router-view>

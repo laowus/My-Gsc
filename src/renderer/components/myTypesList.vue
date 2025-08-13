@@ -69,14 +69,13 @@ const changeMtid = async (v) => {
 <style>
 .detail-top-bar {
   width: 220px;
-  position: absolute;
-  top: 50px;
-  right: 0;
   font-size: 14px;
   display: flex;
   flex-direction: row;
-  justify-content: center;
+  justify-content: flex-end;
   gap: 10px;
+  text-align: right;
+  margin-left: auto;
 }
 
 .detail-top-left {

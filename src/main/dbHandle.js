@@ -136,9 +136,9 @@ const dbHandle = () => {
     });
   });
 
-  ipcMain.handle("db-get-my-list", async (event) => {
+  ipcMain.handle("db-get-my-list", async (event, mtid) => {
     return new Promise((resolve, reject) => {
-      getMyList((result) => {
+      getMyList(mtid, (result) => {
         if (result.success) {
           resolve(result);
         } else {

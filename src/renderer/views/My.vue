@@ -1,41 +1,83 @@
+<script>
+export default {
+  name: "my"
+};
+</script>
+
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, toRaw } from "vue";
+
 import { useAppStore } from "../store/appStore";
 import { storeToRefs } from "pinia";
+import myPoetryList from "../components/myPoetryList.vue";
+
 const { ipcRenderer } = window.require("electron");
 const { myTypes } = storeToRefs(useAppStore());
 
 const curMyList = ref(null);
+const curIndex = ref(1);
+const curpids = ref("");
 
-const fetchMyList = async () => {
-  await ipcRenderer.invoke("db-get-my-list").then((res) => {
-    console.log(res.data);
-    curMyList.value = res.data;
+const fetchMyList = async (mtid) => {
+  await ipcRenderer.invoke("db-get-my-list", mtid).then((res) => {
+    const pids = res.data.map((item) => item.poetryid).join(",");
+    console.log("pids", pids);
+    curpids.value = pids;
   });
 };
 
 onMounted(async () => {
-  await fetchMyList();
+  await fetchMyList(curIndex.value);
 });
 
-const countPid = (mtid) => {
-  // 获取curMyList 里面 item.mtid
-  const pids = curMyList.value.filter((item) => item.mtid === mtid);
-  console.log(pids);
-
-  // 若没有则是0
-  return `共收藏${pids.length || 0}首, [${pids}]`;
+const clickItem = (index) => {
+  curIndex.value = index;
+  fetchMyList(index);
 };
 </script>
 <template>
-  <div>
-    <h1>我的收藏</h1>
-    <ul>
-      <li v-for="(item, index) in myTypes" :key="index">
-        <div if="index>0">{{ item }} - {{ countPid(index) }}</div>
-      </li>
-    </ul>
+  <div class="my">
+    <div class="my-types">
+      <div class="my-item" :class="{ active: curIndex === index + 1 }" v-for="(item, index) in myTypes.slice(1)" :key="index" @click="clickItem(index + 1)">
+        {{ item }}
+      </div>
+    </div>
+    <div>
+      <div v-for="(item, index) in curMyList" :key="index">
+        {{ item }}
+      </div>
+    </div>
+    <myPoetryList :pids="curpids" v-if="curpids" />
+    <div class="special-tip" v-else>当前没有收藏的诗词</div>
   </div>
 </template>
 
-<style></style>
+<style>
+.special-tip {
+  padding: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+.my {
+  display: flex;
+  flex-direction: column;
+  padding-top: 20px;
+}
+.my-types {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+.my-item {
+  padding: 5px 10px;
+  border-radius: 5px;
+  background-color: #f0f0f0;
+  cursor: pointer;
+}
+.my-item.active {
+  background-color: #007bff;
+  color: #fff;
+}
+</style>
