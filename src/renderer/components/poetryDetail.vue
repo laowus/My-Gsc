@@ -4,8 +4,7 @@ import { watch, onMounted, ref } from "vue";
 import KindIcon from "./KindIcon.vue";
 import Writer from "../model/Writer";
 import Poetry from "../model/Poetry";
-import FavoriteTag from "./FavoriteTag.vue";
-
+import myTypesList from "./myTypesList.vue";
 const { ipcRenderer } = window.require("electron");
 const props = defineProps({
   poetryid: {
@@ -26,7 +25,6 @@ const getPoetryDetail = () => {
         data.content = data.content.replace(/\(/g, "<br> (");
         curPoetry.value = new Poetry(data.poetryid, data.typeid, data.kindid, writer, data.title, data.content, data.infos);
         if (curPoetry.value) {
-          console.log("获取infolst");
           getInfoList();
         }
       }
@@ -66,7 +64,7 @@ watch(
   <div class="poem-detail" v-if="curPoetry">
     <div class="poem-title">
       {{ curPoetry.title }}
-      <FavoriteTag :myType="1" />
+      <myTypesList :poetryid="curPoetry.poetryid"></myTypesList>
     </div>
     <div class="poem-writer">
       <KindIcon :kindid="curPoetry.kindid" />
@@ -90,7 +88,7 @@ watch(
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 30px;
+  padding: 80px;
   margin: auto;
 }
 

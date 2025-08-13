@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "electron-store": "^8.0.1",
+    "element-plus": "^2.10.7",
     "extract-zip": "^2.0.1",
     "kuan-vue-waterfall": "^3.0.1",
     "mitt": "^3.0.0",

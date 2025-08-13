@@ -202,6 +202,73 @@ const getCountByRhkeyword = (keyword, callback) => {
     }
   });
 };
+
+const getMyByPoetryid = (poetryid, callback) => {
+  const sql = `SELECT * FROM My where poetryid = ${poetryid}`;
+  console.log(sql);
+
+  db.all(sql, (err, row) => {
+    if (err) {
+      console.error(err.message);
+      callback({ success: false });
+    } else {
+      callback({ success: true, data: row });
+    }
+  });
+};
+
+function changeMtid(poetryid, mtid) {
+  return new Promise((resolve, reject) => {
+    // 先查询数据是否存在
+    const checkQuery = `SELECT * FROM My WHERE poetryid = ?`;
+    db.get(checkQuery, [poetryid], (err, row) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+
+      if (row) {
+        // 数据存在
+        if (mtid === 0) {
+          // mtid 等于 0，执行删除操作
+          const deleteQuery = `DELETE FROM My WHERE poetryid = ?`;
+          db.run(deleteQuery, [poetryid], (err) => {
+            if (err) {
+              reject(err);
+            } else {
+              resolve();
+            }
+          });
+        } else {
+          // mtid 不等于 0，执行更新操作
+          const updateQuery = `UPDATE My SET mtid = ? WHERE poetryid = ?`;
+          db.run(updateQuery, [mtid, poetryid], (err) => {
+            if (err) {
+              reject(err);
+            } else {
+              resolve();
+            }
+          });
+        }
+      } else {
+        // 数据不存在，且 mtid 不等于 0，执行插入操作
+        if (mtid !== 0) {
+          const insertQuery = `INSERT INTO My (poetryid, mtid, addtime) VALUES (?, ?, ?)`;
+          db.run(insertQuery, [poetryid, mtid, new Date().getTime()], (err) => {
+            if (err) {
+              reject(err);
+            } else {
+              resolve();
+            }
+          });
+        } else {
+          // 数据不存在且 mtid 等于 0，不做操作
+          resolve();
+        }
+      }
+    });
+  });
+}
 // 导出批量更新函数
 module.exports = {
   initDatabase,
@@ -214,5 +281,7 @@ module.exports = {
   getTypesByPid,
   getWritersById,
   getRhesis,
-  getCountByRhkeyword
+  getCountByRhkeyword,
+  getMyByPoetryid,
+  changeMtid
 };

@@ -7,7 +7,7 @@ export const useAppStore = defineStore("appStore", {
     keyword: "",
     curRhIndex: 0,
     rhkeyword: "",
-    myTypes: ["唐诗", "宋词", "元曲", "文言文", "喜欢", "推荐"]
+    myTypes: ["未收藏", "唐诗", "宋词", "元曲", "文言文", "喜欢", "推荐"]
   }),
   getters: {},
   actions: {
