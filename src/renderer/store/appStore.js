@@ -6,7 +6,8 @@ export const useAppStore = defineStore("appStore", {
     curIndex: 0,
     keyword: "",
     curRhIndex: 0,
-    rhkeyword: ""
+    rhkeyword: "",
+    myTypes: ["唐诗", "宋词", "元曲", "文言文", "喜欢", "推荐"]
   }),
   getters: {},
   actions: {
@@ -21,6 +22,18 @@ export const useAppStore = defineStore("appStore", {
     },
     setRhkeyword(keyword) {
       this.rhkeyword = keyword;
+    },
+    setMyTypes(myTypes) {
+      this.myTypes = myTypes;
+    },
+    addMyTypes(type) {
+      this.myTypes.push(type);
+    },
+    editMyTypes(index, type) {
+      this.myTypes[index] = type;
+    },
+    removeMyTypes(type) {
+      this.myTypes = this.myTypes.filter((item) => item !== type);
     }
   },
   persist: {
@@ -28,7 +41,7 @@ export const useAppStore = defineStore("appStore", {
     strategies: [
       {
         storage: localStorage,
-        paths: ["curIndex", "keyword", "curRhIndex", "rhkeyword"]
+        paths: ["curIndex", "keyword", "curRhIndex", "rhkeyword", "myTypes"]
       }
     ]
   }

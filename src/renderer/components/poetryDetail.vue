@@ -4,6 +4,7 @@ import { watch, onMounted, ref } from "vue";
 import KindIcon from "./KindIcon.vue";
 import Writer from "../model/Writer";
 import Poetry from "../model/Poetry";
+import FavoriteTag from "./FavoriteTag.vue";
 
 const { ipcRenderer } = window.require("electron");
 const props = defineProps({
@@ -65,6 +66,7 @@ watch(
   <div class="poem-detail" v-if="curPoetry">
     <div class="poem-title">
       {{ curPoetry.title }}
+      <FavoriteTag :myType="1" />
     </div>
     <div class="poem-writer">
       <KindIcon :kindid="curPoetry.kindid" />

@@ -26,14 +26,14 @@ const menuList = ref([
     path: "/rhesis"
   },
   {
-    name: "设置",
-    icon: "icon-shezhi",
-    path: "/setting"
-  },
-  {
     name: "我的",
     icon: "icon-wodedangxuan",
     path: "/my"
+  },
+  {
+    name: "设置",
+    icon: "icon-shezhi",
+    path: "/setting"
   }
 ]);
 

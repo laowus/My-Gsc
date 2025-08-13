@@ -17,13 +17,11 @@ const rhesisList = ref([]);
 
 const fetchPoetrys = async () => {
   try {
-    await ipcRenderer.invoke("db-get-rhesis").then((res) => {
-      console.log(res);
+    await ipcRenderer.invoke("db-get-rhesis", rhkeyword.value).then((res) => {
+      console.log("fetchPoetrys", res);
       if (res.success) {
         rhesisList.value = res.data;
-        console.log(res.data);
         if (rhesisList.value.length > 0) {
-          setCurRhIndex(0);
           curPoetry.value = rhesisList.value[curRhIndex.value];
         }
       }
@@ -35,6 +33,7 @@ const fetchPoetrys = async () => {
 
 onMounted(async () => {
   await fetchPoetrys();
+  nextTick(() => handleScroll());
 });
 
 const handleRhesisClick = (index) => {
@@ -42,8 +41,34 @@ const handleRhesisClick = (index) => {
   setCurRhIndex(index);
   curPoetry.value = rhesisList.value[index];
 };
-
-const search = () => {};
+const handleScroll = () => {
+  if (scrollerRef.value) {
+    console.log("滚动到", curRhIndex.value);
+    scrollerRef.value.scrollToItem(curRhIndex.value);
+  }
+};
+const search = () => {
+  const _keyword = document.querySelector(".search-input").value.trim();
+  //去数据库哪里获取值,如果没有就提示,不保存
+  ipcRenderer.invoke("db-get-count-by-rhkeyword", _keyword).then((res) => {
+    if (res.success) {
+      console.log("getCountByRhkeyword", res);
+      if (res.data > 0) {
+        setRhkeyword(_keyword);
+        setCurRhIndex(0);
+        fetchPoetrys();
+        handleScroll();
+      } else {
+        alert(`关键字: [${_keyword}] 没有符合条件的诗歌,请重新输入`);
+        document.querySelector(".search-input").value = rhkeyword.value;
+        return;
+      }
+    } else {
+      alert("获取诗歌数量失败");
+      return;
+    }
+  });
+};
 </script>
 <template>
   <div class="rhesiss">

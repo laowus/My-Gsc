@@ -172,9 +172,12 @@ const getWritersById = (writerid, callback) => {
   });
 };
 
-const getRhesis = (callback) => {
-  const sql = `SELECT r.rhesisid, r.rcontent, p.poetryid, p.kindid, p.title, w.writername, w.dynastyid FROM rhesis r join poetry p on r.poetryid=p.poetryid inner join writer w on p.writerid=w.writerid order by r.rhesisid asc `;
-
+const getRhesis = (keyword, callback) => {
+  let sql = `SELECT r.rhesisid, r.rcontent, p.poetryid, p.kindid, p.title, w.writername, w.dynastyid FROM rhesis r join poetry p on r.poetryid=p.poetryid inner join writer w on p.writerid=w.writerid `;
+  if (keyword !== "") {
+    console.log(keyword);
+    sql = sql + ` where p.title LIKE '%${keyword}%' OR w.writername LIKE '%${keyword}%' OR r.rcontent LIKE '%${keyword}%'`;
+  }
   db.all(sql, (err, rows) => {
     if (err) {
       console.error(err.message);
@@ -184,7 +187,21 @@ const getRhesis = (callback) => {
     }
   });
 };
+//根据关键字获取诗歌数量
 
+const getCountByRhkeyword = (keyword, callback) => {
+  const sql = `SELECT COUNT(*) as count FROM rhesis r join poetry p on r.poetryid=p.poetryid inner join writer w on p.writerid=w.writerid  where p.title LIKE '%${keyword}%' OR w.writername LIKE '%${keyword}%' OR r.rcontent LIKE '%${keyword}%'`;
+
+  console.log(sql);
+  db.get(sql, (err, row) => {
+    if (err) {
+      console.error(err.message);
+      callback({ success: false });
+    } else {
+      callback({ success: true, data: row.count });
+    }
+  });
+};
 // 导出批量更新函数
 module.exports = {
   initDatabase,
@@ -196,5 +213,6 @@ module.exports = {
   getWritersByDid,
   getTypesByPid,
   getWritersById,
-  getRhesis
+  getRhesis,
+  getCountByRhkeyword
 };

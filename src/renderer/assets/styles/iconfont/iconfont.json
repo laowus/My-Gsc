@@ -6,6 +6,13 @@
   "description": "诗歌",
   "glyphs": [
     {
+      "icon_id": "19949531",
+      "name": "收藏",
+      "font_class": "shoucang",
+      "unicode": "e60a",
+      "unicode_decimal": 58890
+    },
+    {
       "icon_id": "2742647",
       "name": "名词",
       "font_class": "mingci",

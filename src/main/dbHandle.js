@@ -1,5 +1,5 @@
 const { ipcMain } = require("electron");
-const { getAllPoetry, getPoetryByid, getInfoList, getCountByKeyword, getWritersByDid, getTypesByPid, getWritersById, getRhesis } = require("./dbtool");
+const { getAllPoetry, getPoetryByid, getInfoList, getCountByKeyword, getWritersByDid, getTypesByPid, getWritersById, getRhesis, getCountByRhkeyword } = require("./dbtool");
 
 const dbHandle = () => {
   ipcMain.handle("db-get-all-poetry", (event, params) => {
@@ -87,13 +87,26 @@ const dbHandle = () => {
     });
   });
 
-  ipcMain.handle("db-get-rhesis", async (event) => {
+  ipcMain.handle("db-get-rhesis", async (event, keyword) => {
     return new Promise((resolve, reject) => {
-      getRhesis((result) => {
+      getRhesis(keyword, (result) => {
         if (result.success) {
           resolve(result);
         } else {
           reject(new Error("获取名句列表失败"));
+        }
+      });
+    });
+  });
+
+  //根据关键字获取诗歌数量
+  ipcMain.handle("db-get-count-by-rhkeyword", async (event, keyword) => {
+    return new Promise((resolve, reject) => {
+      getCountByRhkeyword(keyword, (result) => {
+        if (result.success) {
+          resolve(result);
+        } else {
+          reject(new Error("获取诗歌数量失败"));
         }
       });
     });
