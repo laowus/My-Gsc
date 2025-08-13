@@ -1,5 +1,5 @@
 const { ipcMain } = require("electron");
-const { getAllPoetry, getPoetryByid, getInfoList, getCountByKeyword, getWritersByDid, getTypesByPid, getWritersById, getRhesis, getCountByRhkeyword, getMyByPoetryid, changeMtid } = require("./dbtool");
+const { getAllPoetry, getPoetryByid, getInfoList, getCountByKeyword, getWritersByDid, getTypesByPid, getWritersById, getRhesis, getCountByRhkeyword, getMyByPoetryid, changeMtid, getMyList } = require("./dbtool");
 
 const dbHandle = () => {
   ipcMain.handle("db-get-all-poetry", (event, params) => {
@@ -127,6 +127,18 @@ const dbHandle = () => {
   ipcMain.handle("db-edit-my-by-poetryid", async (event, poetryid, mtid) => {
     return new Promise((resolve, reject) => {
       changeMtid(poetryid, mtid, (result) => {
+        if (result.success) {
+          resolve(result);
+        } else {
+          reject(new Error("获取我的收藏数据失败"));
+        }
+      });
+    });
+  });
+
+  ipcMain.handle("db-get-my-list", async (event) => {
+    return new Promise((resolve, reject) => {
+      getMyList((result) => {
         if (result.success) {
           resolve(result);
         } else {

@@ -269,6 +269,21 @@ function changeMtid(poetryid, mtid) {
     });
   });
 }
+
+const getMyList = (callback) => {
+  const sql = `SELECT mtid, GROUP_CONCAT(poetryid) as pids FROM My GROUP BY mtid`;
+
+  console.log(sql);
+  db.all(sql, (err, row) => {
+    if (err) {
+      console.error(err.message);
+      callback({ success: false });
+    } else {
+      callback({ success: true, data: row });
+    }
+  });
+};
+
 // 导出批量更新函数
 module.exports = {
   initDatabase,
@@ -283,5 +298,6 @@ module.exports = {
   getRhesis,
   getCountByRhkeyword,
   getMyByPoetryid,
-  changeMtid
+  changeMtid,
+  getMyList
 };
