@@ -1,48 +1,48 @@
 import { createRouter, createWebHashHistory } from "vue-router";
-import Writers from "../views/Writers.vue";
-import Types from "../views/Types.vue";
-import Poems from "../views/Poems.vue";
-import My from "../views/My.vue";
-import Setting from "../views/Setting.vue";
+import { storeToRefs } from "pinia";
+import { useAppStore } from "../store/appStore";
+import { VIEWS } from "../common/utils.js";
 import PoetryList from "../components/PoetryList.vue";
 import writerDetail from "../components/writerDetail.vue";
-import Rhesis from "../views/Rhesis.vue";
 
 const routes = [
   {
     name: "首页",
     path: "/",
-    component: My
+    component: () => {
+      const { start } = storeToRefs(useAppStore());
+      return VIEWS[start.value];
+    }
   },
   {
     name: "诗词",
     path: "/poems",
-    component: Poems
+    component: VIEWS[0]
   },
   {
     name: "诗人",
     path: "/writers",
-    component: Writers
+    component: VIEWS[1]
   },
   {
     name: "分类",
     path: "/types",
-    component: Types
+    component: VIEWS[2]
   },
   {
     name: "名句",
     path: "/rhesis",
-    component: Rhesis
+    component: VIEWS[3]
   },
   {
     name: "我的",
     path: "/my",
-    component: My
+    component: VIEWS[4]
   },
   {
     name: "设置",
     path: "/setting",
-    component: Setting
+    component: VIEWS[5]
   },
   {
     path: "/poetryList",

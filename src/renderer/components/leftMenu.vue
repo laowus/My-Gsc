@@ -1,9 +1,13 @@
 <script setup>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
+import { storeToRefs } from "pinia";
+import { useAppStore } from "../store/appStore";
 const router = useRouter();
+const { start } = storeToRefs(useAppStore());
+const { setStart } = useAppStore();
 
-const index = ref(4);
+const curindex = ref(start.value);
 const menuList = ref([
   {
     name: "诗词",
@@ -38,9 +42,13 @@ const menuList = ref([
 ]);
 
 const menuClick = (idx) => {
-  console.log("menuList[idx].path:", menuList.value[idx].path); // 添加日志，检查路径
+  console.log("menuList[idx].path:", menuList.value[idx].path); // 添加日志，
+
+  setStart(idx);
+
+  // 检查路径
   if (menuList.value[idx] && menuList.value[idx].path) {
-    index.value = idx;
+    curindex.value = idx;
     router.push(menuList.value[idx].path);
   } else {
     console.error("路径未定义");
@@ -52,7 +60,7 @@ const menuClick = (idx) => {
   <div class="menu">
     <img id="logo" src="../assets/logo.png" />
     <button v-for="(item, idx) in menuList" :key="idx" class="btn-icon" @click="menuClick(idx)" :title="item.name">
-      <span class="iconfont" :class="item.icon + (idx === index ? ' selected' : '')"></span>
+      <span class="iconfont" :class="item.icon + (idx === curindex ? ' selected' : '')"></span>
     </button>
   </div>
 </template>
