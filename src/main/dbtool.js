@@ -76,6 +76,18 @@ const getAllPoetry = (params, callback) => {
     }
   });
 };
+const editPoetry = (poetry, callback) => {
+  const sql = ` update Poetry set title=?, kindid=?, typeid=?,writerid=?, content=? where poetryid=?`;
+  console.log("editPoetry", sql);
+  db.run(sql, [poetry.title, poetry.kindid, poetry.typeid, poetry.writerid, poetry.content, poetry.poetryid], (err) => {
+    if (err) {
+      console.error(err.message);
+      callback({ success: false });
+    } else {
+      callback({ success: true });
+    }
+  });
+};
 
 //根据关键字获取诗歌数量
 
@@ -303,5 +315,6 @@ module.exports = {
   getCountByRhkeyword,
   getMyByPoetryid,
   changeMtid,
-  getMyList
+  getMyList,
+  editPoetry
 };

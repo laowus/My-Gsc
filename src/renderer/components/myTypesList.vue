@@ -2,6 +2,8 @@
 import { onMounted, ref, watch } from "vue";
 import { useAppStore } from "../store/appStore";
 import { storeToRefs } from "pinia";
+import { useRoute, useRouter } from "vue-router";
+const router = useRouter();
 
 const { myTypes } = storeToRefs(useAppStore());
 const { ipcRenderer } = window.require("electron");
@@ -56,9 +58,15 @@ const changeMtid = async (v) => {
     console.error("收藏操作出错:", error);
   }
 };
+const editPoetry = () => {
+  router.push({
+    path: "/editPoetry/" + props.poetryid
+  });
+};
 </script>
 <template>
   <div class="detail-top-bar">
+    <i class="iconfont icon-xiugai" title="编辑" @click="editPoetry"></i>
     <div class="detail-top-left">收藏:</div>
     <el-select placeholder="请选择收藏类型" v-model="curMtid" style="width: 100px" @change="changeMtid">
       <el-option v-for="(item, index) in myTypes" :key="index" :label="item" :value="index" />
@@ -76,6 +84,10 @@ const changeMtid = async (v) => {
   gap: 10px;
   text-align: right;
   margin-left: auto;
+  align-items: center;
+}
+.iconfont {
+  cursor: pointer;
 }
 
 .detail-top-left {

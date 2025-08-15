@@ -4,6 +4,7 @@ import { useAppStore } from "../store/appStore";
 import { VIEWS } from "../common/utils.js";
 import PoetryList from "../components/PoetryList.vue";
 import writerDetail from "../components/writerDetail.vue";
+import editPoetry from "../components/editPoetry.vue";
 
 const routes = [
   {
@@ -53,6 +54,12 @@ const routes = [
     name: "作者详情",
     path: "/writerDetail/:id",
     component: writerDetail
+  },
+
+  {
+    name: "编辑诗词",
+    path: "/editPoetry/:id",
+    component: editPoetry
   }
 ];
 
