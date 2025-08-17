@@ -1,6 +1,9 @@
 <script setup>
-import { watch, onMounted, ref } from "vue";
+import { watch, onMounted, ref, toRaw } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { ElMessage } from "element-plus";
+import { Delete, Edit, DocumentAdd } from "@element-plus/icons-vue";
+import { convertHtml, convertText } from "../common/fun";
 
 import Writer from "../model/Writer";
 import Poetry from "../model/Poetry";
@@ -15,6 +18,9 @@ const curPoetry = ref(null);
 const writerList = ref([]);
 const curInfoList = ref([]);
 const curInfoIndex = ref(0);
+const curInfo = ref(null);
+
+const showDialog = ref(false);
 
 const dyOptions = () => {
   // 从索引1开始截取数组，并映射为目标格式
@@ -31,7 +37,6 @@ const fetchPoetry = () => {
         const data = res.data;
         console.log(data);
         const writer = new Writer(data.writerid, data.writername, data.dynastyid);
-        data.content = data.content.replace(/\(/g, "<br> (");
         curPoetry.value = new Poetry(data.poetryid, data.typeid, data.kindid, writer, data.title, data.content, data.infos);
         if (curPoetry.value) {
           getWriterList(false);
@@ -48,6 +53,9 @@ const getInfoList = () => {
     ipcRenderer.invoke("db-get-info-list", 1, curPoetryid.value).then((res) => {
       if (res.success) {
         curInfoList.value = res.data;
+        if (curInfoList.value.length > 0) {
+          curInfo.value = curInfoList.value[0];
+        }
       }
     });
   } catch (error) {
@@ -57,7 +65,6 @@ const getInfoList = () => {
 
 const getWriterList = (isChangeDid) => {
   console.log("getWriterList", curPoetry.value.dynastyid);
-
   try {
     ipcRenderer.invoke("db-get-writers-by-did", curPoetry.value.dynastyid).then((res) => {
       if (res.success) {
@@ -85,18 +92,11 @@ const changeDid = (index) => {
   getWriterList(true);
 };
 
-watch(
-  () => curPoetryid.value,
-  (newVal, oldVal) => {
-    if (newVal !== oldVal) {
-      getPoetryDetail();
-      curInfoIndex.value = 0;
-    }
-  }
-);
-
 const setCurIndex = (index) => {
   curInfoIndex.value = index;
+  if (curInfoList.value.length > 0) {
+    curInfo.value = curInfoList.value[index];
+  }
 };
 
 const goBack = () => {
@@ -105,11 +105,54 @@ const goBack = () => {
 
 const savePoetry = () => {
   if (curPoetry.value) {
-    console.log(curPoetry.value);
+    console.log("savePoetrvalu", toRaw(curPoetry.value));
+    ipcRenderer.invoke("db-edit-poetry", toRaw(curPoetry.value)).then((res) => {
+      if (res.success) {
+        ElMessage.success("修改成功");
+      } else {
+        ElMessage.error("修改失败");
+      }
+    });
+  }
+};
+
+const editInfo = () => {
+  //info
+  if (curInfoIndex.value >= 0) {
+    showDialog.value = true;
+    console.log(curInfoList.value[curInfoIndex.value]);
+  }
+};
+const addInfo = () => {};
+const delInfo = () => {};
+
+const saveInfo = () => {
+  if (curInfo.value) {
+    console.log("saveInfo", toRaw(curInfo.value));
+    // ipcRenderer.invoke("db-edit-info", toRaw(curInfo.value)).then((res) => {
+    //   if (res.success) {
+    //     ElMessage.success("修改成功");
+    //   } else {
+    //     ElMessage.error("修改失败");
+    //   }
+    // });
   }
 };
 </script>
 <template>
+  <el-dialog v-model="showDialog" title="编辑信息" width="80%" align-center>
+    <el-form :model="curInfoList[curInfoIndex]" label-width="120px" v-if="curInfoList.length > 0">
+      <el-form-item label="标题">
+        <el-input v-model="curInfo.title" style="width: 300px; margin-right: 10px"></el-input>
+      </el-form-item>
+      <el-form-item label="内容">
+        <TxtEditor v-model:content="curInfo.content" :height="300" />
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" @click="saveInfo"> 修改 </el-button>
+      </el-form-item>
+    </el-form>
+  </el-dialog>
   <div class="edit-poetry">
     <div class="return" @click="goBack">
       <i class="iconfont icon-fanhui"></i>
@@ -136,17 +179,30 @@ const savePoetry = () => {
             <div class="info-item-title" :class="{ 'title-select': curInfoIndex === index }" v-for="(item, index) in curInfoList" :key="item.id" @click="setCurIndex(index)">
               {{ item.title }}
             </div>
+            <div class="ctrl-btn">
+              <el-button type="info" title="添加信息" :icon="DocumentAdd" circle @click="addInfo" />
+              <el-button type="primary" title="编辑信息" :icon="Edit" circle @click="editInfo" />
+              <el-button type="danger" title="删除信息" :icon="Delete" circle @click="delInfo" />
+            </div>
           </div>
         </div>
       </el-form-item>
       <el-form-item v-if="curInfoList.length > 0">
-        <TxtEditor :content="curInfoList[curInfoIndex].content" :height="200" />
+        <div class="info-content" v-html="convertHtml(curInfo.content)"></div>
       </el-form-item>
     </el-form>
   </div>
 </template>
 
 <style>
+.ctrl-btn {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
 .edit-poetry {
   display: flex;
   flex-direction: column;
@@ -168,7 +224,22 @@ const savePoetry = () => {
   color: #333;
   display: flex;
   flex-direction: row;
-  gap: 20px;
+  gap: 20px; /* 防止内容换行 */
+  white-space: nowrap;
+  /* 允许水平滚动 */
+  overflow-x: auto;
+  /* 可选：添加内边距避免内容贴边 */
+  padding: 8px 0;
+  /* 可选：限制最大宽度（根据父容器调整） */
+  max-width: 100%;
+}
+/* 可选：美化滚动条（WebKit浏览器） */
+.poem-info-title::-webkit-scrollbar {
+  height: 6px;
+}
+.poem-info-title::-webkit-scrollbar-thumb {
+  background-color: #ddd;
+  border-radius: 3px;
 }
 .info-item-title {
   width: fit-content;

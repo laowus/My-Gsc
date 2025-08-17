@@ -77,9 +77,9 @@ const getAllPoetry = (params, callback) => {
   });
 };
 const editPoetry = (poetry, callback) => {
-  const sql = ` update Poetry set title=?, kindid=?, typeid=?,writerid=?, content=? where poetryid=?`;
+  const sql = ` update Poetry set title=?, kindid=?, typeid=?, writerid=?, content=? where poetryid=?`;
   console.log("editPoetry", sql);
-  db.run(sql, [poetry.title, poetry.kindid, poetry.typeid, poetry.writerid, poetry.content, poetry.poetryid], (err) => {
+  db.run(sql, [poetry.title, poetry.kindid, poetry.typeid, poetry.writer.writerid, poetry.content, poetry.poetryid], (err) => {
     if (err) {
       console.error(err.message);
       callback({ success: false });

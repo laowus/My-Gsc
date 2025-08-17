@@ -1,5 +1,7 @@
 <script setup>
 import { ref, watch, onMounted } from "vue";
+import { convertText } from "../common/fun";
+
 const emit = defineEmits(["update:content"]);
 const props = defineProps({
   content: {
@@ -18,7 +20,7 @@ const suffix = ref("\n");
 const barArea = ref(null);
 // 编辑区域
 const editArea = ref(null);
-const editValue = ref(props.content.replace(/<br\s*\/?>/gi, "\n"));
+const editValue = ref(convertText(props.content));
 
 // 设置行号方法
 const line = (n) => {
@@ -52,7 +54,8 @@ watch(
       const rows = Math.ceil(scrollHeight / lineHeight);
       line(rows);
       scrollRightWrapperToTop();
-      emit("update:content", val.replace(/\n/g, "<br>"));
+      console.log("changeval", val);
+      emit("update:content", val);
     });
   },
   { immediate: true, deep: true }
@@ -61,11 +64,13 @@ watch(
 watch(
   () => props.content,
   (newContent) => {
-    editValue.value = newContent.replace(/<br\s*\/?>/gi, "\n");
+    editValue.value = convertText(props.content);
+    console.log("newContent", newContent);
   }
 );
 
 onMounted(() => {
+  console.log("props.content", props.content);
   if (editArea.value) {
     const observer = new ResizeObserver((entries) => {
       for (let entry of entries) {

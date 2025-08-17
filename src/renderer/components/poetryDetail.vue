@@ -15,6 +15,10 @@ const props = defineProps({
 const curPoetry = ref({});
 const curInfoList = ref([]);
 const curInfoIndex = ref(0);
+const convertHtml = (txt) => {
+  let _txt = txt.replace(/\n/g, "<br />");
+  return _txt;
+};
 
 const getPoetryDetail = () => {
   try {
@@ -22,9 +26,10 @@ const getPoetryDetail = () => {
       if (res.success) {
         const data = res.data;
         const writer = new Writer(data.writerid, data.writername, data.dynastyid);
-        data.content = data.content.replace(/\(/g, "<br> (");
+        data.content = convertHtml(data.content);
         curPoetry.value = new Poetry(data.poetryid, data.typeid, data.kindid, writer, data.title, data.content, data.infos);
         if (curPoetry.value) {
+          console.log("curPoetry", curPoetry.value);
           getInfoList();
         }
       }
