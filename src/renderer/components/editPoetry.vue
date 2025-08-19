@@ -158,6 +158,10 @@ const delInfo = () => {
 const saveInfo = () => {
   if (curInfo.value) {
     console.log("saveInfo", toRaw(curInfo.value));
+    if (curInfo.value.title.trim() == "" || curInfo.value.content.trim() == "") {
+      ElMessage.error("标题和内容不能为空");
+      return;
+    }
     ipcRenderer.invoke("db-edit-info", toRaw(curInfo.value)).then((res) => {
       if (res.success) {
         ElMessage.success("修改成功");
@@ -170,7 +174,7 @@ const saveInfo = () => {
 };
 
 const addSaveInfo = () => {
-  if (curAddInfo.value.title.trim() == "" || curAddInfo.value.content == "") {
+  if (curAddInfo.value.title.trim() == "" || curAddInfo.value.content.trim() == "") {
     ElMessage.error("标题和内容不能为空");
     return;
   }
