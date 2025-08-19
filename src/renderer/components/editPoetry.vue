@@ -1,7 +1,7 @@
 <script setup>
 import { watch, onMounted, ref, toRaw } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { ElMessage } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
 import { Delete, Edit, DocumentAdd } from "@element-plus/icons-vue";
 import { convertHtml, convertText } from "../common/fun";
 
@@ -19,8 +19,13 @@ const writerList = ref([]);
 const curInfoList = ref([]);
 const curInfoIndex = ref(0);
 const curInfo = ref(null);
+const curAddInfo = ref({
+  title: "诗词解析标题",
+  content: "诗词解析内容"
+});
 
-const showDialog = ref(false);
+const editDialog = ref(false);
+const addDialog = ref(false);
 
 const dyOptions = () => {
   // 从索引1开始截取数组，并映射为目标格式
@@ -119,29 +124,73 @@ const savePoetry = () => {
 const editInfo = () => {
   //info
   if (curInfoIndex.value >= 0) {
-    showDialog.value = true;
+    editDialog.value = true;
     console.log(curInfoList.value[curInfoIndex.value]);
   }
 };
-const addInfo = () => {};
-const delInfo = () => {};
+const addInfo = () => {
+  addDialog.value = true;
+};
+const delInfo = () => {
+  if (curInfo.value) {
+    ElMessageBox.confirm(`是否删除[${curInfo.value.title}]?`, "删除", {
+      confirmButtonText: "删除",
+      cancelButtonText: "取消",
+      type: "warning"
+    })
+      .then(() => {
+        ipcRenderer.invoke("db-del-info", curInfo.value.infoid).then((res) => {
+          if (res.success) {
+            ElMessage.success("删除成功");
+            getInfoList();
+          } else {
+            ElMessage.error("删除失败");
+          }
+          editDialog.value = false;
+        });
+      })
+      .catch(() => {
+        console.log("删除取消");
+      });
+  }
+};
 
 const saveInfo = () => {
   if (curInfo.value) {
     console.log("saveInfo", toRaw(curInfo.value));
-    // ipcRenderer.invoke("db-edit-info", toRaw(curInfo.value)).then((res) => {
-    //   if (res.success) {
-    //     ElMessage.success("修改成功");
-    //   } else {
-    //     ElMessage.error("修改失败");
-    //   }
-    // });
+    ipcRenderer.invoke("db-edit-info", toRaw(curInfo.value)).then((res) => {
+      if (res.success) {
+        ElMessage.success("修改成功");
+      } else {
+        ElMessage.error("修改失败");
+      }
+      editDialog.value = false;
+    });
   }
+};
+
+const addSaveInfo = () => {
+  if (curAddInfo.value.title.trim() == "" || curAddInfo.value.content == "") {
+    ElMessage.error("标题和内容不能为空");
+    return;
+  }
+  curAddInfo.value.fid = curPoetryid.value;
+  curAddInfo.value.cateid = 1;
+  console.log("addSaveInfo", toRaw(curAddInfo.value));
+  ipcRenderer.invoke("db-add-info", toRaw(curAddInfo.value)).then((res) => {
+    if (res.success) {
+      ElMessage.success("添加成功");
+      getInfoList();
+    } else {
+      ElMessage.error("添加失败");
+    }
+    addDialog.value = false;
+  });
 };
 </script>
 <template>
-  <el-dialog v-model="showDialog" title="编辑信息" width="80%" align-center>
-    <el-form :model="curInfoList[curInfoIndex]" label-width="120px" v-if="curInfoList.length > 0">
+  <el-dialog v-model="editDialog" title="编辑信息" width="80%" align-center>
+    <el-form label-width="120px" v-if="curInfo">
       <el-form-item label="标题">
         <el-input v-model="curInfo.title" style="width: 300px; margin-right: 10px"></el-input>
       </el-form-item>
@@ -150,6 +199,19 @@ const saveInfo = () => {
       </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="saveInfo"> 修改 </el-button>
+      </el-form-item>
+    </el-form>
+  </el-dialog>
+  <el-dialog v-model="addDialog" title="添加信息" width="80%" align-center>
+    <el-form label-width="120px">
+      <el-form-item label="标题">
+        <el-input v-model="curAddInfo.title" style="width: 300px; margin-right: 10px"></el-input>
+      </el-form-item>
+      <el-form-item label="内容">
+        <TxtEditor v-model:content="curAddInfo.content" :height="300" />
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" @click="addSaveInfo"> 添加 </el-button>
       </el-form-item>
     </el-form>
   </el-dialog>

@@ -300,6 +300,45 @@ const getMyList = (mtid, callback) => {
   });
 };
 
+const editInfo = (info, callback) => {
+  const sql = `UPDATE Info SET title = ?, content = ? WHERE infoid = ?`;
+
+  db.run(sql, [info.title, info.content, info.infoid], (err) => {
+    if (err) {
+      console.error(err.message);
+      callback({ success: false });
+    } else {
+      callback({ success: true });
+    }
+  });
+};
+
+const delInfo = (infoid, callback) => {
+  const sql = `DELETE FROM Info WHERE infoid = ?`;
+
+  db.run(sql, [infoid], (err) => {
+    if (err) {
+      console.error(err.message);
+      callback({ success: false });
+    } else {
+      callback({ success: true });
+    }
+  });
+};
+
+const addInfo = (info, callback) => {
+  const sql = `INSERT INTO Info (title, content, cateid ,fid) VALUES (?, ?, ?, ?)`;
+
+  db.run(sql, [info.title, info.content, info.cateid, info.fid], (err) => {
+    if (err) {
+      console.error(err.message);
+      callback({ success: false });
+    } else {
+      callback({ success: true });
+    }
+  });
+};
+
 // 导出批量更新函数
 module.exports = {
   initDatabase,
@@ -316,5 +355,8 @@ module.exports = {
   getMyByPoetryid,
   changeMtid,
   getMyList,
-  editPoetry
+  editPoetry,
+  editInfo,
+  delInfo,
+  addInfo
 };

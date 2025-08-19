@@ -1,5 +1,5 @@
 const { ipcMain } = require("electron");
-const { getAllPoetry, getPoetryByid, getInfoList, getCountByKeyword, getWritersByDid, getTypesByPid, getWritersById, getRhesis, getCountByRhkeyword, getMyByPoetryid, changeMtid, getMyList, editPoetry } = require("./dbtool");
+const { getAllPoetry, getPoetryByid, getInfoList, getCountByKeyword, getWritersByDid, getTypesByPid, getWritersById, getRhesis, getCountByRhkeyword, getMyByPoetryid, changeMtid, getMyList, editPoetry, editInfo, delInfo, addInfo } = require("./dbtool");
 
 const dbHandle = () => {
   ipcMain.handle("db-get-all-poetry", (event, params) => {
@@ -156,6 +156,44 @@ const dbHandle = () => {
           resolve(result);
         } else {
           reject(new Error("编辑诗歌数据失败"));
+        }
+      });
+    });
+  });
+
+  //编辑信息
+  ipcMain.handle("db-edit-info", async (event, info) => {
+    return new Promise((resolve, reject) => {
+      editInfo(info, (result) => {
+        if (result.success) {
+          resolve(result);
+        } else {
+          reject(new Error("编辑信息数据失败"));
+        }
+      });
+    });
+  });
+
+  //删除信息
+  ipcMain.handle("db-del-info", async (event, infoid) => {
+    return new Promise((resolve, reject) => {
+      delInfo(infoid, (result) => {
+        if (result.success) {
+          resolve(result);
+        } else {
+          reject(new Error("删除信息数据失败"));
+        }
+      });
+    });
+  });
+  //添加信息
+  ipcMain.handle("db-add-info", async (event, info) => {
+    return new Promise((resolve, reject) => {
+      addInfo(info, (result) => {
+        if (result.success) {
+          resolve(result);
+        } else {
+          reject(new Error("添加信息数据失败"));
         }
       });
     });
