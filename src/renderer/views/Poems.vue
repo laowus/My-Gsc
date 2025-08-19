@@ -14,6 +14,7 @@ const { curIndex, keyword } = storeToRefs(useAppStore());
 
 const curPoetry = ref(null);
 const poetryList = ref([]);
+const addDialog = ref(false);
 
 const fetchPoetrys = async () => {
   try {
@@ -80,17 +81,37 @@ const search = () => {
     }
   });
 };
+// 记住诗人 writer / 类型 typeid / 种类 kindid / 标题 title / 内容 content / 信息 infos
+const newPoetry = new Poetry(0, 0, 0, new Writer(0, "", 0), "", "", "");
+const addPoetry = ref(newPoetry);
+
+const addPoetry = () => {};
 </script>
 <template>
   <div class="poems">
+    <el-dialog v-model="addDialog" title="添加诗歌" width="80%" align-center>
+      <el-form label-width="120px">
+        <el-form-item label="名字">
+          <el-input v-model="addPoetry.title" style="width: 300px; margin-right: 10px"></el-input>
+        </el-form-item>
+        <el-form-item label="内容">
+          <TxtEditor v-model:content="addPoetry.content" :height="300" />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="saveInfo"> 添加 </el-button>
+        </el-form-item>
+      </el-form>
+    </el-dialog>
     <div class="poems-left">
       <div class="top-bar">
         <div class="search">
-          <span class="iconfont icon-sousuobeifen2"></span>
           <input type="text" placeholder="输入关键字" class="search-input" :value="keyword" />
           <span class="title-count">( {{ curIndex + 1 }}/ {{ poetryList.length }})</span>
         </div>
         <button class="icon-btn" @click="search">
+          <span class="iconfont icon-sousuobeifen2" style="font-size: 30px"></span>
+        </button>
+        <button class="icon-btn" @click="addPoetry">
           <span class="iconfont icon-jia" style="font-size: 30px"></span>
         </button>
       </div>

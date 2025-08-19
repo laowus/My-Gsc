@@ -2,7 +2,7 @@
 import { onMounted, ref, watch } from "vue";
 import { useAppStore } from "../store/appStore";
 import { storeToRefs } from "pinia";
-import { useRoute, useRouter } from "vue-router";
+import { useRouter } from "vue-router";
 const router = useRouter();
 
 const { myTypes } = storeToRefs(useAppStore());
@@ -12,6 +12,10 @@ const props = defineProps({
   poetryid: {
     type: Number,
     default: 1
+  },
+  addPoetry: {
+    type: Function,
+    default: () => {}
   }
 });
 
@@ -81,7 +85,7 @@ const editPoetry = () => {
   display: flex;
   flex-direction: row;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 20px;
   text-align: right;
   margin-left: auto;
   align-items: center;

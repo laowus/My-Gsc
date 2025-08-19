@@ -61,6 +61,9 @@ watch(
     }
   }
 );
+
+
+
 </script>
 <template>
   <div class="poem-detail" v-if="curPoetry">

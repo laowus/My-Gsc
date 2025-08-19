@@ -8,7 +8,8 @@ export const useAppStore = defineStore("appStore", {
     curRhIndex: 0,
     rhkeyword: "",
     myTypes: ["未收藏", "唐诗", "宋词", "元曲", "文言文", "喜欢", "推荐"],
-    start: 0
+    start: 0,
+    lastAddPoetry: { writerid: 1, typeid: 1, kindid: 1 }
   }),
   getters: {},
   actions: {
@@ -29,6 +30,9 @@ export const useAppStore = defineStore("appStore", {
     },
     setStart(start) {
       this.start = start;
+    },
+    setLastAddPoetry(poetry) {
+      this.lastAddPoetry = poetry;
     }
   },
   persist: {
