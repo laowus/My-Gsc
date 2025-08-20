@@ -1,5 +1,5 @@
 <script setup>
-import { watch, onMounted, ref, toRaw } from "vue";
+import { watch, onMounted, ref, toRaw, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { Delete, Edit, DocumentAdd } from "@element-plus/icons-vue";
@@ -19,10 +19,14 @@ const writerList = ref([]);
 const curInfoList = ref([]);
 const curInfoIndex = ref(0);
 const curInfo = ref(null);
-const curAddInfo = ref({
-  title: "诗词解析标题",
-  content: "诗词解析内容"
-});
+const getDefaultInfo = () => {
+  return {
+    title: "诗词解析标题",
+    content: "诗词解析内容"
+  };
+};
+
+const curAddInfo = ref(getDefaultInfo());
 
 const editDialog = ref(false);
 const addDialog = ref(false);
@@ -184,6 +188,7 @@ const addSaveInfo = () => {
   ipcRenderer.invoke("db-add-info", toRaw(curAddInfo.value)).then((res) => {
     if (res.success) {
       ElMessage.success("添加成功");
+      curAddInfo.value = getDefaultInfo();
       getInfoList();
     } else {
       ElMessage.error("添加失败");
@@ -239,12 +244,15 @@ const addSaveInfo = () => {
       <el-form-item label="内容">
         <TxtEditor v-model:content="curPoetry.content" :height="200" />
       </el-form-item>
-      <el-form-item label="信息" v-if="curInfoList.length > 0">
+      <el-form-item label="信息">
         <div class="poem-info">
-          <div class="poem-info-title">
-            <div class="info-item-title" :class="{ 'title-select': curInfoIndex === index }" v-for="(item, index) in curInfoList" :key="item.id" @click="setCurIndex(index)">
-              {{ item.title }}
+          <div class="poem-info-title" style="justify-content: space-between">
+            <div class="left-title">
+              <div class="info-item-title" :class="{ 'title-select': curInfoIndex === index }" v-for="(item, index) in curInfoList" :key="item.id" @click="setCurIndex(index)">
+                {{ item.title }}
+              </div>
             </div>
+
             <div class="ctrl-btn">
               <el-button type="info" title="添加信息" :icon="DocumentAdd" circle @click="addInfo" />
               <el-button type="primary" title="编辑信息" :icon="Edit" circle @click="editInfo" />
@@ -284,6 +292,13 @@ const addSaveInfo = () => {
   gap: 20px;
   width: 100%;
 }
+
+.left-title {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+}
+
 .poem-info-title {
   font-size: 14px;
   font-weight: bold;

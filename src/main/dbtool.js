@@ -159,7 +159,11 @@ const getWritersByDid = (dynastyid, callback) => {
       console.error(err.message);
       callback({ success: false });
     } else {
-      callback({ success: true, data: rows });
+      // 按 writername 字段的拼音排序
+      const sortedRows = rows.sort((a, b) => {
+        return a.writername.localeCompare(b.writername, "zh-CN");
+      });
+      callback({ success: true, data: sortedRows });
     }
   });
 };

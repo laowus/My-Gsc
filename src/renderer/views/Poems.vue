@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, nextTick } from "vue";
+import { ref, onMounted, nextTick, toRaw } from "vue";
 import { storeToRefs } from "pinia";
 import Poetry from "../model/Poetry";
 import Writer from "../model/Writer";
@@ -8,6 +8,7 @@ import PoetryDetail from "../components/poetryDetail.vue";
 import { useAppStore } from "../store/appStore";
 import TxtEditor from "../components/TxtEditor.vue";
 import { DYNASTYS } from "../common/utils";
+import { ElMessage, ElMessageBox } from "element-plus";
 const { ipcRenderer } = window.require("electron");
 
 const scrollerRef = ref(null);
@@ -108,8 +109,6 @@ const search = () => {
   });
 };
 
-const addPoetry = () => {};
-
 const dyOptions = () => {
   // 从索引1开始截取数组，并映射为目标格式
   return DYNASTYS.slice(1).map((item, index) => ({
@@ -134,6 +133,7 @@ const getWriterList = (isChangeDid) => {
           if (isChangeDid) {
             curWriter.value.writerid = writerList.value[0].writerid;
             curWriter.value.writername = writerList.value[0].writername;
+            curAddPoetry.value.writer = curWriter.value;
           }
         }
       }
@@ -144,11 +144,20 @@ const getWriterList = (isChangeDid) => {
 };
 
 const saveAddPoetry = () => {
-  ipcRenderer.invoke("db-add-poetry", curAddPoetry.value).then((res) => {
+  console.log(curAddPoetry.value);
+
+  if (curAddPoetry.value.title.trim === "" || curAddPoetry.value.content.trim === "") {
+    ElMessage.error("标题和内容不能为空");
+    return;
+  }
+
+  ipcRenderer.invoke("db-add-poetry", toRaw(curAddPoetry.value)).then((res) => {
     if (res.success) {
       alert("添加成功");
       addDialog.value = false;
-      //fetchPoetrys();
+      fetchPoetrys();
+      curIndex.value = poetryList.value.length;
+      handleScroll();
     } else {
       alert("添加失败");
     }
@@ -160,7 +169,7 @@ const saveAddPoetry = () => {
     <el-dialog v-model="addDialog" title="添加诗歌" width="80%" align-center>
       <el-form label-width="120px">
         <el-form-item label="名字">
-          <el-input v-model="addPoetry.title" style="width: 300px; margin-right: 10px"></el-input>
+          <el-input v-model="curAddPoetry.title" style="width: 300px; margin-right: 10px"></el-input>
         </el-form-item>
         <el-form-item label="作者">
           <el-select v-model="curWriter.dynastyid" style="width: 100px; margin-right: 20px" @change="changeDid">
@@ -171,11 +180,10 @@ const saveAddPoetry = () => {
           </el-select>
         </el-form-item>
         <el-form-item label="内容">
-          <TxtEditor v-model:content="addPoetry.content" :height="300" />
+          <TxtEditor v-model:content="curAddPoetry.content" :height="300" />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="saveAddPoetry"> 添加 </el-button>
-
           <el-button @click="addDialog = false"> 取消 </el-button>
         </el-form-item>
       </el-form>
