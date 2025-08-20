@@ -6,15 +6,27 @@ import Writer from "../model/Writer";
 import KindIcon from "../components/KindIcon.vue";
 import PoetryDetail from "../components/poetryDetail.vue";
 import { useAppStore } from "../store/appStore";
+import TxtEditor from "../components/TxtEditor.vue";
+import { DYNASTYS } from "../common/utils";
 const { ipcRenderer } = window.require("electron");
 
 const scrollerRef = ref(null);
 const { setCurIndex, setKeyword } = useAppStore();
-const { curIndex, keyword } = storeToRefs(useAppStore());
+const { curIndex, keyword, lastAddPoetry } = storeToRefs(useAppStore());
 
 const curPoetry = ref(null);
 const poetryList = ref([]);
 const addDialog = ref(false);
+//当前作者的列表
+const curWriter = ref(null);
+const writerList = ref([]);
+const curAddPoetry = ref({
+  typeid: "",
+  kindid: 1,
+  writer: null,
+  title: "",
+  content: ""
+});
 
 const fetchPoetrys = async () => {
   try {
@@ -40,8 +52,22 @@ const fetchPoetrys = async () => {
     console.error("获取诗歌数据失败:", error);
   }
 };
+//根据store中的writerid获取作者信息
+const fetchWriter = async () => {
+  if (lastAddPoetry.value.writerid) {
+    ipcRenderer.invoke("db-get-writer-by-id", lastAddPoetry.value.writerid).then((res) => {
+      console.log(res);
+      if (res.data) {
+        curWriter.value = new Writer(res.data.writerid, res.data.writername, res.data.dynastyid, res.data.summary);
+        curAddPoetry.value.writer = curWriter.value;
+        getWriterList(false);
+      }
+    });
+  }
+};
 
 onMounted(async () => {
+  await fetchWriter();
   await fetchPoetrys();
   nextTick(() => handleScroll());
 });
@@ -81,11 +107,53 @@ const search = () => {
     }
   });
 };
-// 记住诗人 writer / 类型 typeid / 种类 kindid / 标题 title / 内容 content / 信息 infos
-const newPoetry = new Poetry(0, 0, 0, new Writer(0, "", 0), "", "", "");
-const addPoetry = ref(newPoetry);
 
 const addPoetry = () => {};
+
+const dyOptions = () => {
+  // 从索引1开始截取数组，并映射为目标格式
+  return DYNASTYS.slice(1).map((item, index) => ({
+    value: index + 1,
+    label: item.trim() // 去除可能存在的空格（如"宋朝 "→"宋朝"
+  }));
+};
+
+const changeDid = (index) => {
+  console.log(index);
+  curWriter.value.dynastyid = index;
+  getWriterList(true);
+};
+
+const getWriterList = (isChangeDid) => {
+  try {
+    ipcRenderer.invoke("db-get-writers-by-did", curWriter.value.dynastyid).then((res) => {
+      if (res.success) {
+        writerList.value = res.data;
+        if (writerList.value.length > 0) {
+          //怎么让writerid默认选中第一个
+          if (isChangeDid) {
+            curWriter.value.writerid = writerList.value[0].writerid;
+            curWriter.value.writername = writerList.value[0].writername;
+          }
+        }
+      }
+    });
+  } catch (error) {
+    console.error("获取信息列表失败:", error);
+  }
+};
+
+const saveAddPoetry = () => {
+  ipcRenderer.invoke("db-add-poetry", curAddPoetry.value).then((res) => {
+    if (res.success) {
+      alert("添加成功");
+      addDialog.value = false;
+      //fetchPoetrys();
+    } else {
+      alert("添加失败");
+    }
+  });
+};
 </script>
 <template>
   <div class="poems">
@@ -94,11 +162,21 @@ const addPoetry = () => {};
         <el-form-item label="名字">
           <el-input v-model="addPoetry.title" style="width: 300px; margin-right: 10px"></el-input>
         </el-form-item>
+        <el-form-item label="作者">
+          <el-select v-model="curWriter.dynastyid" style="width: 100px; margin-right: 20px" @change="changeDid">
+            <el-option v-for="item in dyOptions()" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+          <el-select style="width: 150px" v-model="curWriter.writerid">
+            <el-option v-for="(item, index) in writerList" :key="index" :label="item.writername" :value="item.writerid" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="内容">
           <TxtEditor v-model:content="addPoetry.content" :height="300" />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="saveInfo"> 添加 </el-button>
+          <el-button type="primary" @click="saveAddPoetry"> 添加 </el-button>
+
+          <el-button @click="addDialog = false"> 取消 </el-button>
         </el-form-item>
       </el-form>
     </el-dialog>
@@ -111,7 +189,7 @@ const addPoetry = () => {};
         <button class="icon-btn" @click="search">
           <span class="iconfont icon-sousuobeifen2" style="font-size: 30px"></span>
         </button>
-        <button class="icon-btn" @click="addPoetry">
+        <button class="icon-btn" @click="addDialog = true">
           <span class="iconfont icon-jia" style="font-size: 30px"></span>
         </button>
       </div>

@@ -25,7 +25,7 @@ const getInfoList = () => {
 };
 const fetchWriter = async () => {
   if (curWriterid.value) {
-    ipcRenderer.invoke("db-get-writers-by-id", curWriterid.value).then((res) => {
+    ipcRenderer.invoke("db-get-writer-by-id", curWriterid.value).then((res) => {
       console.log(res);
       if (res.data) {
         curWriter.value = new Writer(res.data.writerid, res.data.writername, res.data.dynastyid, res.data.summary);

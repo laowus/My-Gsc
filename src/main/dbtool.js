@@ -176,7 +176,7 @@ const getTypesByPid = (pid, callback) => {
   });
 };
 
-const getWritersById = (writerid, callback) => {
+const getWriterById = (writerid, callback) => {
   const sql = `SELECT * FROM Writer where writerid=${writerid}`;
   db.get(sql, (err, row) => {
     if (err) {
@@ -339,6 +339,19 @@ const addInfo = (info, callback) => {
   });
 };
 
+const addPoetry = (poetry, callback) => {
+  const sql = `INSERT INTO Poetry (typeid, kindid, writerid, title, content) VALUES (?, ?, ?, ?, ?)`;
+
+  db.run(sql, [poetry.typeid, poetry.kindid, poetry.writer.writerid, poetry.title, poetry.content], (err) => {
+    if (err) {
+      console.error(err.message);
+      callback({ success: false, error: err.message });
+    } else {
+      callback({ success: true, lastID: this.lastID });
+    }
+  });
+};
+
 // 导出批量更新函数
 module.exports = {
   initDatabase,
@@ -349,7 +362,7 @@ module.exports = {
   getCountByKeyword,
   getWritersByDid,
   getTypesByPid,
-  getWritersById,
+  getWriterById,
   getRhesis,
   getCountByRhkeyword,
   getMyByPoetryid,
@@ -358,5 +371,6 @@ module.exports = {
   editPoetry,
   editInfo,
   delInfo,
-  addInfo
+  addInfo,
+  addPoetry
 };

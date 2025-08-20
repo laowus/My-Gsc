@@ -1,5 +1,5 @@
 const { ipcMain } = require("electron");
-const { getAllPoetry, getPoetryByid, getInfoList, getCountByKeyword, getWritersByDid, getTypesByPid, getWritersById, getRhesis, getCountByRhkeyword, getMyByPoetryid, changeMtid, getMyList, editPoetry, editInfo, delInfo, addInfo } = require("./dbtool");
+const { getAllPoetry, getPoetryByid, getInfoList, getCountByKeyword, getWritersByDid, getTypesByPid, getWriterById, getRhesis, getCountByRhkeyword, getMyByPoetryid, changeMtid, getMyList, editPoetry, editInfo, delInfo, addInfo, addPoetry } = require("./dbtool");
 
 const dbHandle = () => {
   ipcMain.handle("db-get-all-poetry", (event, params) => {
@@ -75,9 +75,9 @@ const dbHandle = () => {
     });
   });
 
-  ipcMain.handle("db-get-writers-by-id", async (event, writerid) => {
+  ipcMain.handle("db-get-writer-by-id", async (event, writerid) => {
     return new Promise((resolve, reject) => {
-      getWritersById(writerid, (result) => {
+      getWriterById(writerid, (result) => {
         if (result.success) {
           resolve(result);
         } else {
@@ -194,6 +194,21 @@ const dbHandle = () => {
           resolve(result);
         } else {
           reject(new Error("添加信息数据失败"));
+        }
+      });
+    });
+  });
+
+  //添加诗歌
+  ipcMain.handle("db-add-poetry", async (event, poetry) => {
+    return new Promise((resolve, reject) => {
+      addPoetry(poetry, (result) => {
+        if (result.success) {
+          console.log("新增记录的主键是:", result.lastID);
+          resolve(result);
+        } else {
+          console.error("插入失败:", result.error);
+          reject(new Error("添加诗歌数据失败"));
         }
       });
     });
