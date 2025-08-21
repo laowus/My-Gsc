@@ -54,7 +54,7 @@ const topClass = computed(() => {
   display: flex;
   flex-direction: row;
   height: 30px;
-  width: 90vh;
+  width: 80vh;
   position: absolute; /* 设置绝对定位 */
   top: 0; /* 距离顶部 0 像素 */
   right: 0; /* 距离右侧 0 像素 */

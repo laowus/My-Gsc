@@ -40,7 +40,7 @@ export const useAppStore = defineStore("appStore", {
     strategies: [
       {
         storage: localStorage,
-        paths: ["curIndex", "keyword", "curRhIndex", "rhkeyword", "myTypes", "start"]
+        paths: ["curIndex", "keyword", "curRhIndex", "rhkeyword", "myTypes", "start", "lastAddPoetry"]
       }
     ]
   }

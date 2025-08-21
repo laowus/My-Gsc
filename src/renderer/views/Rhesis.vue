@@ -116,12 +116,7 @@ const search = () => {
   justify-content: flex-start;
   align-items: center;
 }
-.poem-right {
-  display: flex;
-  flex-direction: column;
-  height: 92vh;
-  margin-top: 10px;
-}
+
 .scroller {
   height: 92vh;
 }

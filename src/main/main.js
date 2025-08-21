@@ -11,8 +11,8 @@ const dbHandle = require("./dbhandle");
 let mainWin = null,
   tray = null;
 let options = {
-  width: 1050,
-  height: 660,
+  width: 1024,
+  height: 768,
   frame: false,
   webPreferences: {
     nodeIntegration: true,
@@ -42,8 +42,8 @@ const startup = () => {
 const createWindow = () => {
   if (!mainWin) {
     // 从 electron-store 中获取窗口大小和位置
-    const windowWidth = parseInt(store.get("mainWindowWidth") || 1050);
-    const windowHeight = parseInt(store.get("mainWindowHeight") || 660);
+    const windowWidth = parseInt(store.get("mainWindowWidth") || 1024);
+    const windowHeight = parseInt(store.get("mainWindowHeight") || 768);
     // 增加默认值处理，避免 NaN
     const windowX = parseInt(store.get("mainWindowX")) || 0;
     const windowY = parseInt(store.get("mainWindowY"));
@@ -181,7 +181,7 @@ ipcMain.on("restart-app", () => {
 });
 const init = () => {
   app.whenReady().then(async () => {
-    initDatabase();
+    await initDatabase();
     mainWin = createWindow();
     initWindowBounds(mainWin);
   });

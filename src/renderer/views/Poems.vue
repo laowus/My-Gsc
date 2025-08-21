@@ -12,7 +12,7 @@ import { ElMessage, ElMessageBox } from "element-plus";
 const { ipcRenderer } = window.require("electron");
 
 const scrollerRef = ref(null);
-const { setCurIndex, setKeyword } = useAppStore();
+const { setCurIndex, setKeyword, setLastAddPoetry } = useAppStore();
 const { curIndex, keyword, lastAddPoetry } = storeToRefs(useAppStore());
 
 const curPoetry = ref(null);
@@ -70,13 +70,13 @@ const fetchWriter = async () => {
 onMounted(async () => {
   await fetchWriter();
   await fetchPoetrys();
-  nextTick(() => handleScroll());
+  nextTick(() => handleScroll(curIndex.value));
 });
 
-const handleScroll = () => {
+const handleScroll = (cIndex) => {
   if (scrollerRef.value) {
-    console.log("滚动到", curIndex.value);
-    scrollerRef.value.scrollToItem(curIndex.value);
+    console.log("滚动到", cIndex);
+    scrollerRef.value.scrollToItem(cIndex);
   }
 };
 
@@ -96,7 +96,7 @@ const search = () => {
         setKeyword(_keyword);
         setCurIndex(0);
         fetchPoetrys();
-        handleScroll();
+        handleScroll(curIndex.value);
       } else {
         alert(`关键字: [${_keyword}] 没有符合条件的诗歌,请重新输入`);
         document.querySelector(".search-input").value = keyword.value;
@@ -153,13 +153,19 @@ const saveAddPoetry = () => {
 
   ipcRenderer.invoke("db-add-poetry", toRaw(curAddPoetry.value)).then((res) => {
     if (res.success) {
-      alert("添加成功");
+      ElMessage.success(`添加 [ ${curAddPoetry.value.title} ]成功`);
       addDialog.value = false;
-      fetchPoetrys();
       curIndex.value = poetryList.value.length;
-      handleScroll();
+      fetchPoetrys().then(() => {
+        nextTick(() => handleScroll(curIndex.value));
+        setLastAddPoetry({
+          writerid: curAddPoetry.value.writer.writerid,
+          typeid: "",
+          kindid: 1
+        });
+      });
     } else {
-      alert("添加失败");
+      ElMessage.error(`添加 [ ${curAddPoetry.value.title} ]失败`);
     }
   });
 };
@@ -218,14 +224,53 @@ const saveAddPoetry = () => {
 </template>
 <style>
 .scroller {
-  height: 92vh;
+  height: 100vh;
+}
+.poems-left {
+  width: 300px;
+  min-width: 300px;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #ccc;
+  margin-bottom: 10px !important;
 }
 
-.poems-left-content {
-  margin-top: 10px;
+.top-bar {
+  width: 100vh;
+  height: 30px;
+  background-color: #f5f5f5;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  margin-bottom: 10px;
+  margin-top: 20px;
+}
+.search {
+  width: 100%;
+  height: 30px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  margin-left: 5px;
+  background-color: white;
+}
+
+.search-input {
+  width: 100%;
   flex: 1;
-  overflow-y: auto;
-  gap: 10px;
+  padding: 5px;
+}
+
+.title-count {
+  font-size: 12px;
+  color: #7f8c8d;
+  margin-right: 5px;
+  font-weight: bold;
 }
 .poem-item {
   padding: 5px;
@@ -271,8 +316,6 @@ const saveAddPoetry = () => {
 .poem-right {
   display: flex;
   flex-direction: column;
-  height: 92vh;
-  margin-top: 10px;
 }
 .icon-btn {
   width: 30px;
@@ -289,50 +332,5 @@ const saveAddPoetry = () => {
   display: flex;
   flex-direction: row;
   background-color: #f5f5f5;
-}
-.poems-left {
-  width: 300px;
-  min-width: 300px;
-  display: flex;
-  flex-direction: column;
-  border: 1px solid #ccc;
-  padding-top: 20px;
-  height: 99vh;
-}
-
-.top-bar {
-  width: 98%;
-  height: 30px;
-  background-color: #f5f5f5;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-}
-.search {
-  width: 100%;
-  height: 30px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  margin-left: 5px;
-  background-color: white;
-}
-
-.search-input {
-  width: 100%;
-  flex: 1;
-  padding: 5px;
-}
-
-.title-count {
-  font-size: 12px;
-  color: #7f8c8d;
-  margin-right: 5px;
-  font-weight: bold;
 }
 </style>
