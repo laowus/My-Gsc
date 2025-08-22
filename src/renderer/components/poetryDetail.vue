@@ -5,6 +5,7 @@ import Writer from "../model/Writer";
 import Poetry from "../model/Poetry";
 import myTypesList from "./myTypesList.vue";
 import { convertHtml, convertText } from "../common/fun";
+import TypeStr from "./TypeStr.vue";
 const { ipcRenderer } = window.require("electron");
 
 const props = defineProps({
@@ -22,6 +23,7 @@ const getPoetryDetail = () => {
     ipcRenderer.invoke("db-get-poetry-by-id", props.poetryid).then((res) => {
       if (res.success) {
         const data = res.data;
+        console.log("poetry data", data);
         const writer = new Writer(data.writerid, data.writername, data.dynastyid);
         data.content = convertHtml(data.content);
         curPoetry.value = new Poetry(data.poetryid, data.typeid, data.kindid, writer, data.title, data.content, data.infos);
@@ -69,11 +71,15 @@ watch(
       {{ curPoetry.title }}
     </div>
     <div class="poem-writer">
-      <KindIcon :kindid="curPoetry.kindid" />
-      [{{ curPoetry.writer?.dynastyname }}]
-      {{ curPoetry.writer?.writername }}
+      <div class="poem-writer-left">
+        <KindIcon :kindid="curPoetry.kindid" />
+        [{{ curPoetry.writer?.dynastyname }}]
+        {{ curPoetry.writer?.writername }}
+      </div>
+      <TypeStr :typeid="curPoetry.typeid" />
     </div>
     <div class="poem-content" v-html="curPoetry.content"></div>
+
     <div class="poem-info" v-if="curInfoList.length > 0">
       <div class="poem-info-title">
         <div class="info-item-title" :class="{ 'title-select': curInfoIndex === index }" v-for="(item, index) in curInfoList" :key="item.id" @click="curInfoIndex = index">
@@ -100,12 +106,17 @@ watch(
   color: #333;
   text-align: center;
 }
-
+.poem-writer-left {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
 .poem-writer {
   font-size: 1rem;
   color: #666;
   display: flex;
   flex-direction: row;
+  justify-content: space-between;
 }
 
 .poem-content {

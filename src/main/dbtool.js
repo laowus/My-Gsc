@@ -356,6 +356,20 @@ const addPoetry = (poetry, callback) => {
   });
 };
 
+const getTypesInIds = (typeids, callback) => {
+  const sql = `SELECT * FROM Type WHERE typeid IN (${typeids})`;
+  console.log("sql", sql);
+
+  db.all(sql, (err, rows) => {
+    if (err) {
+      console.error(err.message);
+      callback({ success: false });
+    } else {
+      callback({ success: true, data: rows });
+    }
+  });
+};
+
 // 导出批量更新函数
 module.exports = {
   initDatabase,
@@ -376,5 +390,6 @@ module.exports = {
   editInfo,
   delInfo,
   addInfo,
-  addPoetry
+  addPoetry,
+  getTypesInIds
 };

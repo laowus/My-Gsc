@@ -1,5 +1,5 @@
 const { ipcMain } = require("electron");
-const { getAllPoetry, getPoetryByid, getInfoList, getCountByKeyword, getWritersByDid, getTypesByPid, getWriterById, getRhesis, getCountByRhkeyword, getMyByPoetryid, changeMtid, getMyList, editPoetry, editInfo, delInfo, addInfo, addPoetry } = require("./dbtool");
+const { getAllPoetry, getPoetryByid, getInfoList, getCountByKeyword, getWritersByDid, getTypesByPid, getWriterById, getRhesis, getCountByRhkeyword, getMyByPoetryid, changeMtid, getMyList, editPoetry, editInfo, delInfo, addInfo, addPoetry, getTypesInIds } = require("./dbtool");
 
 const dbHandle = () => {
   ipcMain.handle("db-get-all-poetry", (event, params) => {
@@ -209,6 +209,18 @@ const dbHandle = () => {
         } else {
           console.error("插入失败:", result.error);
           reject(new Error("添加诗歌数据失败"));
+        }
+      });
+    });
+  });
+
+  ipcMain.handle("db-get-types-in-ids", async (event, ids) => {
+    return new Promise((resolve, reject) => {
+      getTypesInIds(ids, (result) => {
+        if (result.success) {
+          resolve(result);
+        } else {
+          reject(new Error("获取类别数据失败"));
         }
       });
     });
