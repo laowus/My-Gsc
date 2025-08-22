@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, nextTick, toRaw } from "vue";
+import { ref, onMounted, nextTick, toRaw, watch } from "vue";
 import { storeToRefs } from "pinia";
 import Poetry from "../model/Poetry";
 import Writer from "../model/Writer";
@@ -19,15 +19,9 @@ const curPoetry = ref(null);
 const poetryList = ref([]);
 const addDialog = ref(false);
 //当前作者的列表
-const curWriter = ref(null);
+const curWriter = ref({ dynastyid: 7 });
 const writerList = ref([]);
-const curAddPoetry = ref({
-  typeid: "",
-  kindid: 1,
-  writer: null,
-  title: "",
-  content: ""
-});
+const curAddPoetry = ref(null);
 
 const fetchPoetrys = async () => {
   try {
@@ -53,22 +47,8 @@ const fetchPoetrys = async () => {
     console.error("获取诗歌数据失败:", error);
   }
 };
-//根据store中的writerid获取作者信息
-const fetchWriter = async () => {
-  if (lastAddPoetry.value.writerid) {
-    ipcRenderer.invoke("db-get-writer-by-id", lastAddPoetry.value.writerid).then((res) => {
-      console.log(res);
-      if (res.data) {
-        curWriter.value = new Writer(res.data.writerid, res.data.writername, res.data.dynastyid, res.data.summary);
-        curAddPoetry.value.writer = curWriter.value;
-        getWriterList(false);
-      }
-    });
-  }
-};
 
 onMounted(async () => {
-  await fetchWriter();
   await fetchPoetrys();
   nextTick(() => handleScroll(curIndex.value));
 });
@@ -108,6 +88,8 @@ const search = () => {
     }
   });
 };
+/** 以下代码用于添加诗歌******* */
+//根据store中的writerid获取作者信息
 
 const dyOptions = () => {
   // 从索引1开始截取数组，并映射为目标格式
@@ -116,31 +98,38 @@ const dyOptions = () => {
     label: item.trim() // 去除可能存在的空格（如"宋朝 "→"宋朝"
   }));
 };
-
+//选择朝代,默认选择第一个
 const changeDid = (index) => {
   console.log(index);
   curWriter.value.dynastyid = index;
-  getWriterList(true);
+  // 修改后：在数据加载完成后设置默认值
+  getWriterList().then(() => {
+    if (writerList.value.length > 0) {
+      console.log("writerList.value", writerList.value[0].writerid);
+      curAddPoetry.value.writerid = writerList.value[0].writerid;
+      console.log("curAddPoetry", curAddPoetry.value);
+    }
+  });
 };
 
-const getWriterList = (isChangeDid) => {
-  try {
-    ipcRenderer.invoke("db-get-writers-by-did", curWriter.value.dynastyid).then((res) => {
-      if (res.success) {
-        writerList.value = res.data;
-        if (writerList.value.length > 0) {
-          //怎么让writerid默认选中第一个
-          if (isChangeDid) {
-            curWriter.value.writerid = writerList.value[0].writerid;
-            curWriter.value.writername = writerList.value[0].writername;
-            curAddPoetry.value.writer = curWriter.value;
-          }
+//根据朝代获取作者列
+const getWriterList = () => {
+  return new Promise((resolve) => {
+    console.log("getWriterList", curWriter.value.dynastyid);
+    try {
+      ipcRenderer.invoke("db-get-writers-by-did", curWriter.value.dynastyid).then((res) => {
+        if (res.success) {
+          writerList.value = res.data;
+          // 验证数据结构（关键调试步骤）
+          console.log("作者数据结构:", res.data[0]);
+          resolve();
         }
-      }
-    });
-  } catch (error) {
-    console.error("获取信息列表失败:", error);
-  }
+      });
+    } catch (error) {
+      console.error("获取作者列表失败:", error);
+      resolve();
+    }
+  });
 };
 
 const saveAddPoetry = () => {
@@ -154,21 +143,46 @@ const saveAddPoetry = () => {
   ipcRenderer.invoke("db-add-poetry", toRaw(curAddPoetry.value)).then((res) => {
     if (res.success) {
       ElMessage.success(`添加 [ ${curAddPoetry.value.title} ]成功`);
-      addDialog.value = false;
       curIndex.value = poetryList.value.length;
       fetchPoetrys().then(() => {
         nextTick(() => handleScroll(curIndex.value));
+        //新增后记录之前新增的作者等记录,下次新增时默认选中
         setLastAddPoetry({
-          writerid: curAddPoetry.value.writer.writerid,
+          writerid: curAddPoetry.value.writerid,
           typeid: "",
-          kindid: 1
+          kindid: 1,
+          title: "",
+          content: ""
         });
+        addDialog.value = false;
       });
     } else {
       ElMessage.error(`添加 [ ${curAddPoetry.value.title} ]失败`);
     }
   });
 };
+
+const fetchWriter = () => {
+  console.log("fetchWriter", lastAddPoetry.value.writerid);
+  if (lastAddPoetry.value.writerid) {
+    ipcRenderer.invoke("db-get-writer-by-id", lastAddPoetry.value.writerid).then((res) => {
+      console.log(res);
+      if (res.data) {
+        curWriter.value = new Writer(res.data.writerid, res.data.writername, res.data.dynastyid, res.data.summary);
+        getWriterList();
+      }
+    });
+  }
+};
+//用于添加新的诗歌作用 监测addDialog是否打开
+watch(addDialog, () => {
+  if (addDialog.value) {
+    //显示弹出框 添加诗歌 获取朝代id
+    console.log("打开添加诗歌");
+    curAddPoetry.value = { ...toRaw(lastAddPoetry.value) };
+    fetchWriter();
+  }
+});
 </script>
 <template>
   <div class="poems">
@@ -181,7 +195,7 @@ const saveAddPoetry = () => {
           <el-select v-model="curWriter.dynastyid" style="width: 100px; margin-right: 20px" @change="changeDid">
             <el-option v-for="item in dyOptions()" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
-          <el-select style="width: 150px" v-model="curWriter.writerid">
+          <el-select style="width: 150px" v-model="curAddPoetry.writerid">
             <el-option v-for="(item, index) in writerList" :key="index" :label="item.writername" :value="item.writerid" />
           </el-select>
         </el-form-item>

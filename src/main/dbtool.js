@@ -346,7 +346,7 @@ const addInfo = (info, callback) => {
 const addPoetry = (poetry, callback) => {
   const sql = `INSERT INTO Poetry (typeid, kindid, writerid, title, content) VALUES (?, ?, ?, ?, ?)`;
 
-  db.run(sql, [poetry.typeid, poetry.kindid, poetry.writer.writerid, poetry.title, poetry.content], (err) => {
+  db.run(sql, [poetry.typeid, poetry.kindid, poetry.writerid, poetry.title, poetry.content], (err) => {
     if (err) {
       console.error(err.message);
       callback({ success: false, error: err.message });
