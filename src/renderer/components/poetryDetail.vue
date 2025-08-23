@@ -79,7 +79,6 @@ watch(
       <TypeStr :typeid="curPoetry.typeid" />
     </div>
     <div class="poem-content" v-html="curPoetry.content"></div>
-
     <div class="poem-info" v-if="curInfoList.length > 0">
       <div class="poem-info-title">
         <div class="info-item-title" :class="{ 'title-select': curInfoIndex === index }" v-for="(item, index) in curInfoList" :key="item.id" @click="curInfoIndex = index">
@@ -96,7 +95,7 @@ watch(
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 30px;
+  padding: 20px;
   margin: auto;
 }
 
@@ -123,7 +122,7 @@ watch(
   font-size: 1.2rem;
   line-height: 1.8;
   color: #333;
-  padding: 20px;
+  padding: 10px;
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   max-height: 30vh;

@@ -346,7 +346,7 @@ const addInfo = (info, callback) => {
 const addPoetry = (poetry, callback) => {
   const sql = `INSERT INTO Poetry (typeid, kindid, writerid, title, content) VALUES (?, ?, ?, ?, ?)`;
 
-  db.run(sql, [poetry.typeid, poetry.kindid, poetry.writerid, poetry.title, poetry.content], (err) => {
+  db.run(sql, [poetry.typeids, poetry.kindid, poetry.writerid, poetry.title, poetry.content], (err) => {
     if (err) {
       console.error(err.message);
       callback({ success: false, error: err.message });
@@ -366,6 +366,22 @@ const getTypesInIds = (typeids, callback) => {
       callback({ success: false });
     } else {
       callback({ success: true, data: rows });
+    }
+  });
+};
+
+const get2Types = (callback) => {
+  const sql = `SELECT * FROM Type where parentid != 0`;
+  console.log("sql", sql);
+  db.all(sql, (err, rows) => {
+    if (err) {
+      console.error(err.message);
+      callback({ success: false });
+    } else {
+      const sortedRows = rows.sort((a, b) => {
+        return a.typename.localeCompare(b.typename, "zh-CN");
+      });
+      callback({ success: true, data: sortedRows });
     }
   });
 };
@@ -391,5 +407,7 @@ module.exports = {
   delInfo,
   addInfo,
   addPoetry,
-  getTypesInIds
+  getTypesInIds,
+  get2Types
+
 };

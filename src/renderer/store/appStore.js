@@ -9,7 +9,7 @@ export const useAppStore = defineStore("appStore", {
     rhkeyword: "",
     myTypes: ["未收藏", "唐诗", "宋词", "元曲", "文言文", "喜欢", "推荐"],
     start: 0,
-    lastAddPoetry: { writerid: 1, typeid: "", kindid: 1, title: "", content: "" }
+    lastAddPoetry: { writerid: 1, typeid: "11", kindid: 1, title: "", content: "" }
   }),
   getters: {},
   actions: {

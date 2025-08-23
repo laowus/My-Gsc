@@ -7,7 +7,8 @@ import KindIcon from "../components/KindIcon.vue";
 import PoetryDetail from "../components/poetryDetail.vue";
 import { useAppStore } from "../store/appStore";
 import TxtEditor from "../components/TxtEditor.vue";
-import { DYNASTYS } from "../common/utils";
+import { DYNASTYS, KINDS } from "../common/utils";
+
 import { ElMessage, ElMessageBox } from "element-plus";
 const { ipcRenderer } = window.require("electron");
 
@@ -26,19 +27,16 @@ const curAddPoetry = ref(null);
 const fetchPoetrys = async () => {
   try {
     await ipcRenderer.invoke("db-get-all-poetry", { ty: "keyword", v: keyword.value }).then((res) => {
-      console.log(res);
       if (res.success) {
         poetryList.value = res.data.map((item) => {
           const writer = new Writer(item.writerid, item.writername, item.dynastyid);
           return new Poetry(item.poetryid, item.typeid, item.kindid, writer, item.title, item.content, item.infos);
         });
-        console.log(poetryList.value.length);
         if (curIndex.value > poetryList.value.length) {
           setCurIndex(0);
         }
         if (poetryList.value.length > 0) {
           curPoetry.value = poetryList.value[curIndex.value];
-          console.log("curPoetry.value", curPoetry.value);
         }
       } else {
       }
@@ -55,13 +53,11 @@ onMounted(async () => {
 
 const handleScroll = (cIndex) => {
   if (scrollerRef.value) {
-    console.log("滚动到", cIndex);
     scrollerRef.value.scrollToItem(cIndex);
   }
 };
 
 const handlePoemClick = (index) => {
-  console.log(index);
   setCurIndex(index);
   curPoetry.value = poetryList.value[index];
 };
@@ -71,7 +67,6 @@ const search = () => {
   //去数据库哪里获取值,如果没有就提示,不保存
   ipcRenderer.invoke("db-get-count-by-keyword", _keyword).then((res) => {
     if (res.success) {
-      console.log("getCountByKeyword", res);
       if (res.data > 0) {
         setKeyword(_keyword);
         setCurIndex(0);
@@ -98,16 +93,61 @@ const dyOptions = () => {
     label: item.trim() // 去除可能存在的空格（如"宋朝 "→"宋朝"
   }));
 };
+
+const kindOptions = () => {
+  return KINDS.slice(1).map((item, index) => ({
+    value: index + 1,
+    label: item.trim() //
+  }));
+};
+
+const type2Options = ref([]);
+
+const convertTypeidToArray = (typeidStr) => {
+  if (!typeidStr) return [];
+  // 拆分字符串并转换为数字数组
+  const typeIds = typeidStr.split(",").map((id) => Number(id));
+  console.log("typeIds", typeIds);
+
+  // 匹配type2Options中的label
+  return typeIds.map((id) => {
+    console.log("id", id);
+    const option = type2Options.value.find((item) => item.value == id);
+    console.log("option", option);
+    return {
+      value: id,
+      label: option ? option.label : "未知类型"
+    };
+  });
+};
+
+const fetch2Types = async () => {
+  try {
+    await ipcRenderer.invoke("db-get-2-types").then((res) => {
+      if (res.success) {
+        if (res.data.length > 0) {
+          type2Options.value = res.data.map((item) => ({
+            value: item.typeid,
+            label: item.typename
+          }));
+          if (type2Options.value.length > 0) {
+            curAddPoetry.value.typeid = convertTypeidToArray(lastAddPoetry.value.typeid);
+          }
+        }
+      }
+    });
+  } catch (error) {
+    console.error("获取类别数据失败:", error);
+  }
+};
+
 //选择朝代,默认选择第一个
 const changeDid = (index) => {
-  console.log(index);
   curWriter.value.dynastyid = index;
   // 修改后：在数据加载完成后设置默认值
   getWriterList().then(() => {
     if (writerList.value.length > 0) {
-      console.log("writerList.value", writerList.value[0].writerid);
       curAddPoetry.value.writerid = writerList.value[0].writerid;
-      console.log("curAddPoetry", curAddPoetry.value);
     }
   });
 };
@@ -115,13 +155,10 @@ const changeDid = (index) => {
 //根据朝代获取作者列
 const getWriterList = () => {
   return new Promise((resolve) => {
-    console.log("getWriterList", curWriter.value.dynastyid);
     try {
       ipcRenderer.invoke("db-get-writers-by-did", curWriter.value.dynastyid).then((res) => {
         if (res.success) {
           writerList.value = res.data;
-          // 验证数据结构（关键调试步骤）
-          console.log("作者数据结构:", res.data[0]);
           resolve();
         }
       });
@@ -133,11 +170,18 @@ const getWriterList = () => {
 };
 
 const saveAddPoetry = () => {
-  console.log(curAddPoetry.value);
-
+  console.log("curAddPoetry.value", curAddPoetry.value);
   if (curAddPoetry.value.title.trim === "" || curAddPoetry.value.content.trim === "") {
     ElMessage.error("标题和内容不能为空");
     return;
+  }
+  if (curAddPoetry.value.typeid.length === 0) {
+    ElMessage.error("请选择类型");
+    return;
+  } else {
+    const typeValues = curAddPoetry.value.typeid;
+    console.log("typeValues", typeValues);
+    curAddPoetry.value.typeids = typeValues.length === 1 ? typeValues[0] : typeValues.join(",");
   }
 
   ipcRenderer.invoke("db-add-poetry", toRaw(curAddPoetry.value)).then((res) => {
@@ -163,10 +207,8 @@ const saveAddPoetry = () => {
 };
 
 const fetchWriter = () => {
-  console.log("fetchWriter", lastAddPoetry.value.writerid);
   if (lastAddPoetry.value.writerid) {
     ipcRenderer.invoke("db-get-writer-by-id", lastAddPoetry.value.writerid).then((res) => {
-      console.log(res);
       if (res.data) {
         curWriter.value = new Writer(res.data.writerid, res.data.writername, res.data.dynastyid, res.data.summary);
         getWriterList();
@@ -178,7 +220,7 @@ const fetchWriter = () => {
 watch(addDialog, () => {
   if (addDialog.value) {
     //显示弹出框 添加诗歌 获取朝代id
-    console.log("打开添加诗歌");
+    fetch2Types();
     curAddPoetry.value = { ...toRaw(lastAddPoetry.value) };
     fetchWriter();
   }
@@ -190,6 +232,8 @@ watch(addDialog, () => {
       <el-form label-width="120px">
         <el-form-item label="名字">
           <el-input v-model="curAddPoetry.title" style="width: 300px; margin-right: 10px"></el-input>
+          <div class="mr10">体裁</div>
+          <el-select v-model="curAddPoetry.kindid" style="width: 100px; margin-right: 20px"> <el-option v-for="item in kindOptions()" :key="item.value" :label="item.label" :value="item.value" /> </el-select>
         </el-form-item>
         <el-form-item label="作者">
           <el-select v-model="curWriter.dynastyid" style="width: 100px; margin-right: 20px" @change="changeDid">
@@ -199,8 +243,13 @@ watch(addDialog, () => {
             <el-option v-for="(item, index) in writerList" :key="index" :label="item.writername" :value="item.writerid" />
           </el-select>
         </el-form-item>
+        <el-form-item label="分类">
+          <el-select multiple placeholder="选择分类" v-model="curAddPoetry.typeid" style="width: auto; min-width: 150px">
+            <el-option v-for="item in type2Options" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="内容">
-          <TxtEditor v-model:content="curAddPoetry.content" :height="300" />
+          <TxtEditor v-model:content="curAddPoetry.content" :height="250" />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="saveAddPoetry"> 添加 </el-button>
@@ -237,6 +286,9 @@ watch(addDialog, () => {
   </div>
 </template>
 <style>
+.mr10 {
+  margin-right: 10px;
+}
 .scroller {
   height: 100vh;
 }

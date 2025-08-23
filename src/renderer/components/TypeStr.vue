@@ -1,6 +1,5 @@
 <script setup>
-import { onMounted, ref } from "vue";
-
+import { onMounted, ref, watch } from "vue";
 const { ipcRenderer } = window.require("electron");
 const props = defineProps({
   typeid: {
@@ -23,11 +22,20 @@ const fetchNames = () => {
 onMounted(() => {
   fetchNames();
 });
+
+watch(
+  () => props.typeid,
+  (newVal, oldVal) => {
+    if (newVal !== oldVal) {
+      fetchNames();
+    }
+  }
+);
 </script>
 <template>
   <div class="type-container">
     <div v-if="typeNames.length > 0">
-      <div v-for="item in typeNames" :key="item.typeid" class="type-item">
+      <div v-for="item in typeNames" :key="item.typeid" class="type-item" @click="$router.push({ path: `/poetryList/`, query: { ty: 'type', v: item.typeid, n: item.typename } })">
         {{ item.typename }}
       </div>
     </div>
@@ -36,9 +44,9 @@ onMounted(() => {
 <style scoped>
 .type-container {
   padding: 8px;
-  max-width: 600px;
-  white-space: nowrap;
+  text-align: right;
   overflow-x: auto;
+  flex: 1;
 }
 
 .type-item {
