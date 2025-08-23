@@ -239,12 +239,12 @@ watch(addDialog, () => {
           <el-select v-model="curWriter.dynastyid" style="width: 100px; margin-right: 20px" @change="changeDid">
             <el-option v-for="item in dyOptions()" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
-          <el-select style="width: 150px" v-model="curAddPoetry.writerid">
+          <el-select filterable style="width: 150px" v-model="curAddPoetry.writerid">
             <el-option v-for="(item, index) in writerList" :key="index" :label="item.writername" :value="item.writerid" />
           </el-select>
         </el-form-item>
         <el-form-item label="分类">
-          <el-select multiple placeholder="选择分类" v-model="curAddPoetry.typeid" style="width: auto; min-width: 150px">
+          <el-select multiple filterable placeholder="选择分类" v-model="curAddPoetry.typeid" style="width: auto; min-width: 150px">
             <el-option v-for="item in type2Options" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
         </el-form-item>

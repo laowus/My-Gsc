@@ -237,7 +237,7 @@ const addSaveInfo = () => {
         <el-select v-model="curPoetry.writer.dynastyid" style="width: 100px; margin-right: 20px" @change="changeDid">
           <el-option v-for="item in dyOptions()" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
-        <el-select style="width: 150px" v-model="curPoetry.writer.writerid">
+        <el-select filterable style="width: 150px" v-model="curPoetry.writer.writerid">
           <el-option v-for="(item, index) in writerList" :key="index" :label="item.writername" :value="item.writerid" />
         </el-select>
       </el-form-item>
