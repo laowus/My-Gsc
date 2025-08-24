@@ -181,7 +181,7 @@ const saveAddPoetry = () => {
   } else {
     const typeValues = curAddPoetry.value.typeid;
     console.log("typeValues", typeValues);
-    curAddPoetry.value.typeids = typeValues.length === 1 ? typeValues[0] : typeValues.join(",");
+    curAddPoetry.value.typeids = typeValues.length === 1 ? typeValues[0].toString() : typeValues.join(",");
   }
 
   ipcRenderer.invoke("db-add-poetry", toRaw(curAddPoetry.value)).then((res) => {
@@ -193,8 +193,8 @@ const saveAddPoetry = () => {
         //新增后记录之前新增的作者等记录,下次新增时默认选中
         setLastAddPoetry({
           writerid: curAddPoetry.value.writerid,
-          typeid: "",
-          kindid: 1,
+          typeid: curAddPoetry.value.typeids,
+          kindid: curAddPoetry.value.kindid,
           title: "",
           content: ""
         });

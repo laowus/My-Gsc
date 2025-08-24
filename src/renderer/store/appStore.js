@@ -33,6 +33,12 @@ export const useAppStore = defineStore("appStore", {
     },
     setLastAddPoetry(poetry) {
       this.lastAddPoetry = poetry;
+    },
+    clearAppState() {
+      // 重置为初始状态
+      this.$reset();
+      // 清除持久化存储
+      localStorage.removeItem("appStore");
     }
   },
   persist: {

@@ -9,7 +9,7 @@ import Writer from "../model/Writer";
 import Poetry from "../model/Poetry";
 import TxtEditor from "./TxtEditor.vue";
 const { ipcRenderer } = window.require("electron");
-import { DYNASTYS } from "../common/utils";
+import { DYNASTYS, KINDS } from "../common/utils";
 const route = useRoute();
 const router = useRouter();
 
@@ -38,7 +38,12 @@ const dyOptions = () => {
     label: item.trim() // 去除可能存在的空格（如"宋朝 "→"宋朝"
   }));
 };
-
+const kindOptions = () => {
+  return KINDS.slice(1).map((item, index) => ({
+    value: index + 1,
+    label: item.trim() //
+  }));
+};
 const fetchPoetry = () => {
   try {
     ipcRenderer.invoke("db-get-poetry-by-id", curPoetryid.value).then((res) => {
@@ -231,6 +236,8 @@ const addSaveInfo = () => {
     <el-form :model="curPoetry" label-width="120px" v-if="curPoetry">
       <el-form-item label="诗词名称">
         <el-input v-model="curPoetry.title" style="width: 300px; margin-right: 10px"></el-input>
+        <div class="mr10">体裁</div>
+        <el-select v-model="curPoetry.kindid" style="width: 100px; margin-right: 20px"> <el-option v-for="item in kindOptions()" :key="item.value" :label="item.label" :value="item.value" /> </el-select>
         <el-button type="primary" @click="savePoetry"> 修改 </el-button>
       </el-form-item>
       <el-form-item label="作者">
@@ -240,6 +247,9 @@ const addSaveInfo = () => {
         <el-select filterable style="width: 150px" v-model="curPoetry.writer.writerid">
           <el-option v-for="(item, index) in writerList" :key="index" :label="item.writername" :value="item.writerid" />
         </el-select>
+      </el-form-item>
+      <el-form-item label="类型">
+        <!-- <el-select v-model="curPoetry.typeid" style="width: 100px; margin-right: 20px"> <el-option v-for="item in kindOptions()" :key="item.value" :label="item.label" :value="item.value" /> </el-select> -->
       </el-form-item>
       <el-form-item label="内容">
         <TxtEditor v-model:content="curPoetry.content" :height="200" />
