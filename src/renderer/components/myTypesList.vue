@@ -4,7 +4,8 @@ import { useAppStore } from "../store/appStore";
 import { storeToRefs } from "pinia";
 import { useRouter } from "vue-router";
 const router = useRouter();
-
+import { ElMessage, ElMessageBox } from "element-plus";
+const { setCurIndex } = useAppStore();
 const { myTypes } = storeToRefs(useAppStore());
 const { ipcRenderer } = window.require("electron");
 
@@ -13,9 +14,9 @@ const props = defineProps({
     type: Number,
     default: 1
   },
-  addPoetry: {
-    type: Function,
-    default: () => {}
+  title: {
+    type: String,
+    default: ""
   }
 });
 
@@ -25,24 +26,20 @@ const curPoetryid = ref(props.poetryid);
 const fetchMy = async () => {
   await ipcRenderer.invoke("db-get-my-by-poetryid", props.poetryid).then((res) => {
     if (res.success && res.data.length > 0) {
-      console.log(res.data);
       curMtid.value = res.data[0].mtid;
     } else {
       curMtid.value = 0;
-      console.log("未收藏");
     }
   });
 };
 
 onMounted(async () => {
-  console.log(props.poetryid);
   await fetchMy();
 });
 
 watch(
   () => props.poetryid,
   (newVal, oldVal) => {
-    console.log(newVal, oldVal);
     if (newVal !== oldVal) {
       fetchMy();
     }
@@ -67,9 +64,35 @@ const editPoetry = () => {
     path: "/editPoetry/" + props.poetryid
   });
 };
+
+const delPoetry = async () => {
+  ElMessageBox.confirm(`是否删除[${props.title}]?`, "删除", {
+    confirmButtonText: "删除",
+    cancelButtonText: "取消",
+    type: "warning"
+  })
+    .then(async () => {
+      try {
+        const res = await ipcRenderer.invoke("db-del-poetry", props.poetryid);
+        if (res.success) {
+          console.log("删除成功");
+          //怎么强制刷新父父组件
+          setCurIndex(props.poetryid - 1 || 0);
+        } else {
+          console.log("删除失败");
+        }
+      } catch (error) {
+        console.error("删除操作出错:", error);
+      }
+    })
+    .catch(() => {
+      console.log("删除取消");
+    });
+};
 </script>
 <template>
   <div class="detail-top-bar">
+    <i class="iconfont icon-shanchu" title="删除" @click="delPoetry"></i>
     <i class="iconfont icon-xiugai" title="编辑" @click="editPoetry"></i>
     <div class="detail-top-left">收藏:</div>
     <el-select placeholder="请选择收藏类型" v-model="curMtid" style="width: 100px" @change="changeMtid">

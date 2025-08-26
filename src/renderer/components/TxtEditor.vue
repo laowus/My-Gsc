@@ -54,7 +54,6 @@ watch(
       const rows = Math.ceil(scrollHeight / lineHeight);
       line(rows);
       scrollRightWrapperToTop();
-      console.log("changeval", val);
       emit("update:content", val);
     });
   },
@@ -65,12 +64,10 @@ watch(
   () => props.content,
   (newContent) => {
     editValue.value = convertText(props.content);
-    console.log("newContent", newContent);
   }
 );
 
 onMounted(() => {
-  console.log("props.content", props.content);
   if (editArea.value) {
     const observer = new ResizeObserver((entries) => {
       for (let entry of entries) {

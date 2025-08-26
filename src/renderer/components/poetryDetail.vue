@@ -23,12 +23,10 @@ const getPoetryDetail = () => {
     ipcRenderer.invoke("db-get-poetry-by-id", props.poetryid).then((res) => {
       if (res.success) {
         const data = res.data;
-        console.log("poetry data", data);
         const writer = new Writer(data.writerid, data.writername, data.dynastyid);
         data.content = convertHtml(data.content);
         curPoetry.value = new Poetry(data.poetryid, data.typeid, data.kindid, writer, data.title, data.content, data.infos);
         if (curPoetry.value) {
-          console.log("curPoetry", curPoetry.value);
           getInfoList();
         }
       }
@@ -66,7 +64,7 @@ watch(
 </script>
 <template>
   <div class="poem-detail" v-if="curPoetry">
-    <myTypesList :poetryid="curPoetry.poetryid"></myTypesList>
+    <myTypesList :poetryid="curPoetry.poetryid" :title="curPoetry.title"></myTypesList>
     <div class="poem-title">
       {{ curPoetry.title }}
     </div>

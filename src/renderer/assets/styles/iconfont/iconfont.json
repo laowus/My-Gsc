@@ -6,6 +6,13 @@
   "description": "诗歌",
   "glyphs": [
     {
+      "icon_id": "1304884",
+      "name": "删除",
+      "font_class": "shanchu",
+      "unicode": "e621",
+      "unicode_decimal": 58913
+    },
+    {
       "icon_id": "5086088",
       "name": "新建",
       "font_class": "xinjian",

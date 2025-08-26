@@ -1,9 +1,9 @@
 <script setup>
-import { watch, onMounted, ref, toRaw, nextTick } from "vue";
+import { onMounted, ref, toRaw } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { Delete, Edit, DocumentAdd } from "@element-plus/icons-vue";
-import { convertHtml, convertText } from "../common/fun";
+import { convertHtml, convertText, convertTypeidToArray } from "../common/fun";
 
 import Writer from "../model/Writer";
 import Poetry from "../model/Poetry";
@@ -44,6 +44,28 @@ const kindOptions = () => {
     label: item.trim() //
   }));
 };
+const type2Options = ref([]);
+
+const fetch2Types = async () => {
+  try {
+    await ipcRenderer.invoke("db-get-2-types").then((res) => {
+      if (res.success) {
+        if (res.data.length > 0) {
+          type2Options.value = res.data.map((item) => ({
+            value: item.typeid,
+            label: item.typename
+          }));
+          if (type2Options.value.length > 0) {
+            curPoetry.value.typeid = convertTypeidToArray(curPoetry.value.typeid);
+            console.log("curPoetry.value.typeid", curPoetry.value.typeid);
+          }
+        }
+      }
+    });
+  } catch (error) {
+    console.error("获取类别数据失败:", error);
+  }
+};
 const fetchPoetry = () => {
   try {
     ipcRenderer.invoke("db-get-poetry-by-id", curPoetryid.value).then((res) => {
@@ -53,6 +75,7 @@ const fetchPoetry = () => {
         const writer = new Writer(data.writerid, data.writername, data.dynastyid);
         curPoetry.value = new Poetry(data.poetryid, data.typeid, data.kindid, writer, data.title, data.content, data.infos);
         if (curPoetry.value) {
+          fetch2Types();
           getWriterList(false);
           getInfoList();
         }
@@ -119,7 +142,15 @@ const goBack = () => {
 
 const savePoetry = () => {
   if (curPoetry.value) {
-    console.log("savePoetrvalu", toRaw(curPoetry.value));
+    if (curPoetry.value.typeid.length === 0) {
+      ElMessage.error("请选择类型");
+      return;
+    } else {
+      const typeValues = curPoetry.value.typeid;
+      console.log("typeValues", typeValues);
+      curPoetry.value.typeids = typeValues.length === 1 ? typeValues[0].toString() : typeValues.join(",");
+    }
+    console.log("savePoetry", toRaw(curPoetry.value));
     ipcRenderer.invoke("db-edit-poetry", toRaw(curPoetry.value)).then((res) => {
       if (res.success) {
         ElMessage.success("修改成功");
@@ -249,7 +280,9 @@ const addSaveInfo = () => {
         </el-select>
       </el-form-item>
       <el-form-item label="类型">
-        <!-- <el-select v-model="curPoetry.typeid" style="width: 100px; margin-right: 20px"> <el-option v-for="item in kindOptions()" :key="item.value" :label="item.label" :value="item.value" /> </el-select> -->
+        <el-select multiple filterable placeholder="选择分类" v-model="curPoetry.typeid" style="width: auto; min-width: 150px">
+          <el-option v-for="item in type2Options" :key="item.value" :label="item.label" :value="item.value" />
+        </el-select>
       </el-form-item>
       <el-form-item label="内容">
         <TxtEditor v-model:content="curPoetry.content" :height="200" />

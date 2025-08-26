@@ -8,6 +8,7 @@ import PoetryDetail from "../components/poetryDetail.vue";
 import { useAppStore } from "../store/appStore";
 import TxtEditor from "../components/TxtEditor.vue";
 import { DYNASTYS, KINDS } from "../common/utils";
+import { convertTypeidToArray } from "../common/fun";
 
 import { ElMessage, ElMessageBox } from "element-plus";
 const { ipcRenderer } = window.require("electron");
@@ -102,24 +103,6 @@ const kindOptions = () => {
 };
 
 const type2Options = ref([]);
-
-const convertTypeidToArray = (typeidStr) => {
-  if (!typeidStr) return [];
-  // 拆分字符串并转换为数字数组
-  const typeIds = typeidStr.split(",").map((id) => Number(id));
-  console.log("typeIds", typeIds);
-
-  // 匹配type2Options中的label
-  return typeIds.map((id) => {
-    console.log("id", id);
-    const option = type2Options.value.find((item) => item.value == id);
-    console.log("option", option);
-    return {
-      value: id,
-      label: option ? option.label : "未知类型"
-    };
-  });
-};
 
 const fetch2Types = async () => {
   try {

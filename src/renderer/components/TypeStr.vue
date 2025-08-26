@@ -11,7 +11,7 @@ const props = defineProps({
 const typeNames = ref([]);
 
 const fetchNames = () => {
-  console.log("Fetching names for typeids:", props.typeid);
+  console.log("props.typeid", props.typeid);
   ipcRenderer.invoke("db-get-types-in-ids", props.typeid).then((res) => {
     if (res.success) {
       typeNames.value = res.data;

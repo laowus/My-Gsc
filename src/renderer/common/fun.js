@@ -3,8 +3,12 @@ const convertHtml = (txt) => {
   return _txt;
 };
 const convertText = (text) => {
-  console.log("text", text);
   return text.replace(/<br[^>]*>/gi, "\n");
 };
 
-export { convertHtml, convertText };
+const convertTypeidToArray = (typeidStr) => {
+  if (!typeidStr) return [1];
+  return typeidStr.split(",").map(Number);
+};
+
+export { convertHtml, convertText, convertTypeidToArray };

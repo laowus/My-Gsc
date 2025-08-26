@@ -79,7 +79,7 @@ const getAllPoetry = (params, callback) => {
 const editPoetry = (poetry, callback) => {
   const sql = ` update Poetry set title=?, kindid=?, typeid=?, writerid=?, content=? where poetryid=?`;
   console.log("editPoetry", sql);
-  db.run(sql, [poetry.title, poetry.kindid, poetry.typeid, poetry.writer.writerid, poetry.content, poetry.poetryid], (err) => {
+  db.run(sql, [poetry.title, poetry.kindid, poetry.typeids, poetry.writer.writerid, poetry.content, poetry.poetryid], (err) => {
     if (err) {
       console.error(err.message);
       callback({ success: false });
@@ -356,6 +356,18 @@ const addPoetry = (poetry, callback) => {
   });
 };
 
+const delPoetry = (poetryid, callback) => {
+  const sql = `DELETE FROM Poetry WHERE poetryid = ?`;
+  db.run(sql, [poetryid], (err) => {
+    if (err) {
+      console.error(err.message);
+      callback({ success: false, error: err.message });
+    } else {
+      callback({ success: true });
+    }
+  });
+};
+
 const getTypesInIds = (typeids, callback) => {
   const sql = `SELECT * FROM Type WHERE typeid IN (${typeids})`;
   console.log("sql", sql);
@@ -408,6 +420,6 @@ module.exports = {
   addInfo,
   addPoetry,
   getTypesInIds,
-  get2Types
-
+  get2Types,
+  delPoetry
 };
