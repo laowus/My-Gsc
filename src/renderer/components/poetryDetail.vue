@@ -25,7 +25,8 @@ const getPoetryDetail = () => {
         const data = res.data;
         const writer = new Writer(data.writerid, data.writername, data.dynastyid);
         data.content = convertHtml(data.content);
-        curPoetry.value = new Poetry(data.poetryid, data.typeid, data.kindid, writer, data.title, data.content, data.infos);
+        curPoetry.value = new Poetry(data.poetryid, data.typeid, data.kindid, writer, data.title, data.content, data.infos, data.isdel);
+
         if (curPoetry.value) {
           getInfoList();
         }
@@ -64,7 +65,7 @@ watch(
 </script>
 <template>
   <div class="poem-detail" v-if="curPoetry">
-    <myTypesList :poetryid="curPoetry.poetryid" :title="curPoetry.title"></myTypesList>
+    <myTypesList :poetry="curPoetry"></myTypesList>
     <div class="poem-title">
       {{ curPoetry.title }}
     </div>

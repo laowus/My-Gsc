@@ -9,7 +9,7 @@ import { useAppStore } from "../store/appStore";
 import TxtEditor from "../components/TxtEditor.vue";
 import { DYNASTYS, KINDS } from "../common/utils";
 import { convertTypeidToArray } from "../common/fun";
-
+import EventBus from "../common/EventBus";
 import { ElMessage, ElMessageBox } from "element-plus";
 const { ipcRenderer } = window.require("electron");
 
@@ -38,14 +38,22 @@ const fetchPoetrys = async () => {
         }
         if (poetryList.value.length > 0) {
           curPoetry.value = poetryList.value[curIndex.value];
+          console.log("设置当前的诗歌", curPoetry.value);
         }
-      } else {
       }
     });
   } catch (error) {
     console.error("获取诗歌数据失败:", error);
   }
 };
+
+EventBus.on("refreshPoetryList", (tp) => {
+  if (tp == "delete") {
+    console.log("删除后刷新诗歌列表", curIndex.value);
+    setCurIndex(curIndex.value - 1);
+    fetchPoetrys();
+  }
+});
 
 onMounted(async () => {
   await fetchPoetrys();

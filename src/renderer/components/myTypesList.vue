@@ -3,28 +3,25 @@ import { onMounted, ref, watch } from "vue";
 import { useAppStore } from "../store/appStore";
 import { storeToRefs } from "pinia";
 import { useRouter } from "vue-router";
+import { ElMessageBox } from "element-plus";
+import EventBus from "../common/EventBus";
 const router = useRouter();
-import { ElMessage, ElMessageBox } from "element-plus";
-const { setCurIndex } = useAppStore();
 const { myTypes } = storeToRefs(useAppStore());
 const { ipcRenderer } = window.require("electron");
 
 const props = defineProps({
-  poetryid: {
-    type: Number,
-    default: 1
-  },
-  title: {
-    type: String,
-    default: ""
+  poetry: {
+    type: Object,
+    default: () => null
   }
 });
 
 const curMtid = ref(0);
-const curPoetryid = ref(props.poetryid);
 
 const fetchMy = async () => {
-  await ipcRenderer.invoke("db-get-my-by-poetryid", props.poetryid).then((res) => {
+  await ipcRenderer.invoke("db-get-my-by-poetryid", props.poetry.poetryid || 1).then((res) => {
+    console.log(res);
+
     if (res.success && res.data.length > 0) {
       curMtid.value = res.data[0].mtid;
     } else {
@@ -34,11 +31,12 @@ const fetchMy = async () => {
 };
 
 onMounted(async () => {
+  console.log("myTypesList,", props.poetry);
   await fetchMy();
 });
 
 watch(
-  () => props.poetryid,
+  () => props.poetry.poetryid,
   (newVal, oldVal) => {
     if (newVal !== oldVal) {
       fetchMy();
@@ -48,7 +46,7 @@ watch(
 
 const changeMtid = async (v) => {
   try {
-    const res = await ipcRenderer.invoke("db-edit-my-by-poetryid", props.poetryid, v);
+    const res = await ipcRenderer.invoke("db-edit-my-by-poetryid", props.poetry.poetryid, v);
     if (res.success) {
       console.log("收藏成功");
       fetchMy();
@@ -61,23 +59,24 @@ const changeMtid = async (v) => {
 };
 const editPoetry = () => {
   router.push({
-    path: "/editPoetry/" + props.poetryid
+    path: "/editPoetry/" + props.poetry.poetryid
   });
 };
 
 const delPoetry = async () => {
-  ElMessageBox.confirm(`是否删除[${props.title}]?`, "删除", {
+  ElMessageBox.confirm(`是否删除[${props.poetry.title}]?`, "删除", {
     confirmButtonText: "删除",
     cancelButtonText: "取消",
     type: "warning"
   })
     .then(async () => {
       try {
-        const res = await ipcRenderer.invoke("db-del-poetry", props.poetryid);
+        const res = await ipcRenderer.invoke("db-del-poetry", props.poetry.poetryid);
+
         if (res.success) {
           console.log("删除成功");
           //怎么强制刷新父父组件
-          setCurIndex(props.poetryid - 1 || 0);
+          EventBus.emit("refreshPoetryList", "delete");
         } else {
           console.log("删除失败");
         }
@@ -92,7 +91,7 @@ const delPoetry = async () => {
 </script>
 <template>
   <div class="detail-top-bar">
-    <i class="iconfont icon-shanchu" title="删除" @click="delPoetry"></i>
+    <i class="iconfont icon-shanchu" title="删除" @click="delPoetry" v-if="props.poetry.isdel != 0"></i>
     <i class="iconfont icon-xiugai" title="编辑" @click="editPoetry"></i>
     <div class="detail-top-left">收藏:</div>
     <el-select placeholder="请选择收藏类型" v-model="curMtid" style="width: 100px" @change="changeMtid">
