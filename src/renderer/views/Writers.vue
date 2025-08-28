@@ -1,11 +1,21 @@
 <script setup>
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted, watch, toRaw } from "vue";
 import { DYNASTYS } from "../common/utils";
 import Writer from "../model/Writer";
 const { ipcRenderer } = window.require("electron");
 import { useRouter } from "vue-router";
 import getColor from "../common/colorUtils";
+import TxtEditor from "../components/TxtEditor.vue";
+import { ElMessage, ElMessageBox } from "element-plus";
+
 const router = useRouter();
+const addDialog = ref(false);
+const _writer = {
+  writername: "",
+  dynastyid: 8,
+  summary: ""
+};
+const curWriter = ref(_writer);
 
 const curdid = ref(7);
 const writers = ref([]);
@@ -31,15 +41,65 @@ onMounted(async () => {
 watch(curdid, async () => {
   await getWriters();
 });
+
+const dyOptions = () => {
+  // 从索引1开始截取数组，并映射为目标格式
+  return DYNASTYS.slice(1).map((item, index) => ({
+    value: index + 1,
+    label: item.trim() // 去除可能存在的空格（如"宋朝 "→"宋朝"
+  }));
+};
+watch(addDialog, () => {
+  if (addDialog.value) {
+    //显示弹出框 添加诗歌 获取朝代id
+    curWriter.value = { ..._writer };
+  }
+});
+
+const addWriter = () => {
+  if (curWriter.value.writername === "" || curWriter.value.summary === "") {
+    ElMessage.error("请输入作者名和内容");
+    return;
+  }
+  ipcRenderer.invoke("db-add-writer", toRaw(curWriter.value)).then((res) => {
+    if (res.success) {
+      ElMessage.success("添加成功");
+      addDialog.value = false;
+      getWriters();
+    }
+  });
+};
 </script>
 <template>
   <div class="writers">
+    <el-dialog v-model="addDialog" title="添加作者" width="80%" align-center>
+      <el-form label-width="120px">
+        <el-form-item label="朝代">
+          <el-select v-model="curWriter.dynastyid" style="width: 100px; margin-right: 20px">
+            <el-option v-for="item in dyOptions()" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="名字">
+          <el-input v-model="curWriter.writername" style="width: 200px; margin-right: 10px"></el-input>
+        </el-form-item>
+        <el-form-item label="简介">
+          <TxtEditor v-model:content="curWriter.summary" :height="250" />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="addWriter"> 添加 </el-button>
+          <el-button @click="addDialog = false"> 取消 </el-button>
+        </el-form-item>
+      </el-form>
+    </el-dialog>
     <div class="writers-left">
       <div class="dynasty-item" :class="{ dselected: curdid === index }" :style="{ backgroundColor: getColor(index) }" v-for="(item, index) in DYNASTYS" :key="index" @click="curdid = index">
         {{ item }}
       </div>
     </div>
     <div class="writers-right">
+      <button class="icon-btn" @click="addDialog = true">
+        <span class="iconfont icon-jia" style="font-size: 30px"></span>
+      </button>
       <div class="horizontal-waterfall" v-if="writers.length > 0">
         <div v-for="(item, index) in writers" :key="index" :style="{ backgroundColor: getColor(index) }" class="item" @click="router.push({ path: `/writerDetail/${item.writerid}` })">{{ item.writername }}</div>
       </div>

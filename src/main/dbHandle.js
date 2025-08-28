@@ -1,5 +1,5 @@
 const { ipcMain } = require("electron");
-const { getAllPoetry, getPoetryByid, getInfoList, getCountByKeyword, getWritersByDid, getTypesByPid, getWriterById, getRhesis, getCountByRhkeyword, getMyByPoetryid, changeMtid, getMyList, editPoetry, editInfo, delInfo, addInfo, addPoetry, getTypesInIds, get2Types, delPoetry } = require("./dbtool");
+const { getAllPoetry, getPoetryByid, getInfoList, getCountByKeyword, getWritersByDid, getTypesByPid, getWriterById, getRhesis, getCountByRhkeyword, getMyByPoetryid, changeMtid, getMyList, editPoetry, editInfo, delInfo, addInfo, addPoetry, getTypesInIds, get2Types, delPoetry, addWriter } = require("./dbtool");
 
 const dbHandle = () => {
   ipcMain.handle("db-get-all-poetry", (event, params) => {
@@ -246,6 +246,19 @@ const dbHandle = () => {
           resolve(result);
         } else {
           reject(new Error("删除诗歌数据失败"));
+        }
+      });
+    });
+  });
+
+  //添加作者
+  ipcMain.handle("db-add-writer", async (event, writer) => {
+    return new Promise((resolve, reject) => {
+      addWriter(writer, (result) => {
+        if (result.success) {
+          resolve(result);
+        } else {
+          reject(new Error("添加作者数据失败"));
         }
       });
     });

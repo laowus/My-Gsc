@@ -107,7 +107,7 @@ const getCountByKeyword = (keyword, callback) => {
 
 const getPoetryByid = (poetryid, callback) => {
   db.get(
-    ` select p.poetryid, p.kindid, p.typeid,w.dynastyid,w.writerid,w.writername,p.title, p.content 
+    ` select p.poetryid, p.kindid, p.typeid,w.dynastyid,w.writerid,w.writername,p.title, p.content , p.isdel
     from Poetry p
     join Writer w on p.writerid = w.writerid 
     where p.poetryid = ?`,
@@ -398,6 +398,18 @@ const get2Types = (callback) => {
   });
 };
 
+const addWriter = (writer, callback) => {
+  const sql = `INSERT INTO Writer (dynastyid, writername, summary) VALUES (?, ?, ?)`;
+  db.run(sql, [writer.dynastyid, writer.writername, writer.summary], (err) => {
+    if (err) {
+      console.error(err.message);
+      callback({ success: false, error: err.message });
+    } else {
+      callback({ success: true, lastID: this.lastID });
+    }
+  });
+};
+
 // 导出批量更新函数
 module.exports = {
   initDatabase,
@@ -421,5 +433,6 @@ module.exports = {
   addPoetry,
   getTypesInIds,
   get2Types,
-  delPoetry
+  delPoetry,
+  addWriter
 };

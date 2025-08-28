@@ -39,6 +39,7 @@ watch(
   () => props.poetry.poetryid,
   (newVal, oldVal) => {
     if (newVal !== oldVal) {
+      console.log("myTypesList,", props.poetry);
       fetchMy();
     }
   }

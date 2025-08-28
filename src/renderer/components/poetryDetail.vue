@@ -23,6 +23,8 @@ const getPoetryDetail = () => {
     ipcRenderer.invoke("db-get-poetry-by-id", props.poetryid).then((res) => {
       if (res.success) {
         const data = res.data;
+        console.log("db-get-poetry-by-id", data);
+
         const writer = new Writer(data.writerid, data.writername, data.dynastyid);
         data.content = convertHtml(data.content);
         curPoetry.value = new Poetry(data.poetryid, data.typeid, data.kindid, writer, data.title, data.content, data.infos, data.isdel);
