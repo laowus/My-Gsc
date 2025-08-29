@@ -1,7 +1,8 @@
 const { ipcMain } = require("electron");
-const { getAllPoetry, getPoetryByid, getInfoList, getCountByKeyword, getWritersByDid, getTypesByPid, getWriterById, getRhesis, getCountByRhkeyword, getMyByPoetryid, changeMtid, getMyList, editPoetry, editInfo, delInfo, addInfo, addPoetry, getTypesInIds, get2Types, delPoetry, addWriter } = require("./dbtool");
+const { getAllPoetry, getPoetryByid, getInfoList, getCountByKeyword, getWritersByDid, getTypesByPid, getWriterById, getRhesis, getCountByRhkeyword, getMyByPoetryid, changeMtid, getMyList, editPoetry, editInfo, delInfo, addInfo, addPoetry, getTypesInIds, get2Types, delPoetry, addWriter, editWriter, delWriter } = require("./dbtool");
 
 const dbHandle = () => {
+  //** 诗歌相关 */
   ipcMain.handle("db-get-all-poetry", (event, params) => {
     return new Promise((resolve, reject) => {
       getAllPoetry(params, (result) => {
@@ -26,17 +27,6 @@ const dbHandle = () => {
     });
   });
 
-  ipcMain.handle("db-get-info-list", async (event, cateid, id) => {
-    return new Promise((resolve, reject) => {
-      getInfoList(cateid, id, (result) => {
-        if (result.success) {
-          resolve(result);
-        } else {
-          reject(new Error("获取信息数据失败"));
-        }
-      });
-    });
-  });
   //根据关键字获取诗歌数量
   ipcMain.handle("db-get-count-by-keyword", async (event, keyword) => {
     return new Promise((resolve, reject) => {
@@ -50,22 +40,64 @@ const dbHandle = () => {
     });
   });
 
-  //根据朝代id获取作者列表
-  ipcMain.handle("db-get-writers-by-did", async (event, dynastyid) => {
+  //添加诗歌
+  ipcMain.handle("db-add-poetry", async (event, poetry) => {
     return new Promise((resolve, reject) => {
-      getWritersByDid(dynastyid, (result) => {
+      addPoetry(poetry, (result) => {
         if (result.success) {
+          console.log("新增记录的主键是:", result.lastID);
           resolve(result);
         } else {
-          reject(new Error("获取作者列表失败"));
+          console.error("插入失败:", result.error);
+          reject(new Error("添加诗歌数据失败"));
         }
       });
     });
   });
 
-  ipcMain.handle("db-get-types-by-pid", async (event, pid) => {
+  //编辑诗歌
+  ipcMain.handle("db-edit-poetry", async (event, poetry) => {
     return new Promise((resolve, reject) => {
-      getTypesByPid(pid, (result) => {
+      editPoetry(poetry, (result) => {
+        if (result.success) {
+          resolve(result);
+        } else {
+          reject(new Error("编辑诗歌数据失败"));
+        }
+      });
+    });
+  });
+
+  //删除诗歌
+  ipcMain.handle("db-del-poetry", async (event, poetryid) => {
+    return new Promise((resolve, reject) => {
+      delPoetry(poetryid, (result) => {
+        if (result.success) {
+          resolve(result);
+        } else {
+          reject(new Error("删除诗歌数据失败"));
+        }
+      });
+    });
+  });
+
+  //** 信息相关 */
+  ipcMain.handle("db-get-info-list", async (event, cateid, id) => {
+    return new Promise((resolve, reject) => {
+      getInfoList(cateid, id, (result) => {
+        if (result.success) {
+          resolve(result);
+        } else {
+          reject(new Error("获取信息数据失败"));
+        }
+      });
+    });
+  });
+
+  /************** 作者相关 *******************/
+  ipcMain.handle("db-get-writers-by-did", async (event, dynastyid) => {
+    return new Promise((resolve, reject) => {
+      getWritersByDid(dynastyid, (result) => {
         if (result.success) {
           resolve(result);
         } else {
@@ -86,7 +118,56 @@ const dbHandle = () => {
       });
     });
   });
+  //添加作者
+  ipcMain.handle("db-add-writer", async (event, writer) => {
+    return new Promise((resolve, reject) => {
+      addWriter(writer, (result) => {
+        if (result.success) {
+          resolve(result);
+        } else {
+          reject(new Error("添加作者数据失败"));
+        }
+      });
+    });
+  });
+  //编辑作者
+  ipcMain.handle("db-edit-writer", async (event, writer) => {
+    return new Promise((resolve, reject) => {
+      editWriter(writer, (result) => {
+        if (result.success) {
+          resolve(result);
+        } else {
+          reject(new Error("添加作者数据失败"));
+        }
+      });
+    });
+  });
 
+  //删除作者
+  ipcMain.handle("db-del-writer", async (event, writerid) => {
+    return new Promise((resolve, reject) => {
+      delWriter(writerid, (result) => {
+        if (result.success) {
+          resolve(result);
+        } else {
+          reject(new Error("删除作者数据失败"));
+        }
+      });
+    });
+  });
+
+  ipcMain.handle("db-get-types-by-pid", async (event, pid) => {
+    return new Promise((resolve, reject) => {
+      getTypesByPid(pid, (result) => {
+        if (result.success) {
+          resolve(result);
+        } else {
+          reject(new Error("获取作者列表失败"));
+        }
+      });
+    });
+  });
+  /**************** 名句相关 ********/
   ipcMain.handle("db-get-rhesis", async (event, keyword) => {
     return new Promise((resolve, reject) => {
       getRhesis(keyword, (result) => {
@@ -148,20 +229,7 @@ const dbHandle = () => {
     });
   });
 
-  //编辑诗歌
-  ipcMain.handle("db-edit-poetry", async (event, poetry) => {
-    return new Promise((resolve, reject) => {
-      editPoetry(poetry, (result) => {
-        if (result.success) {
-          resolve(result);
-        } else {
-          reject(new Error("编辑诗歌数据失败"));
-        }
-      });
-    });
-  });
-
-  //编辑信息
+  /** ** ** ** **  信息  ** **  */
   ipcMain.handle("db-edit-info", async (event, info) => {
     return new Promise((resolve, reject) => {
       editInfo(info, (result) => {
@@ -199,21 +267,6 @@ const dbHandle = () => {
     });
   });
 
-  //添加诗歌
-  ipcMain.handle("db-add-poetry", async (event, poetry) => {
-    return new Promise((resolve, reject) => {
-      addPoetry(poetry, (result) => {
-        if (result.success) {
-          console.log("新增记录的主键是:", result.lastID);
-          resolve(result);
-        } else {
-          console.error("插入失败:", result.error);
-          reject(new Error("添加诗歌数据失败"));
-        }
-      });
-    });
-  });
-
   ipcMain.handle("db-get-types-in-ids", async (event, ids) => {
     return new Promise((resolve, reject) => {
       getTypesInIds(ids, (result) => {
@@ -233,32 +286,6 @@ const dbHandle = () => {
           resolve(result);
         } else {
           reject(new Error("获取类别数据失败"));
-        }
-      });
-    });
-  });
-
-  //删除诗歌
-  ipcMain.handle("db-del-poetry", async (event, poetryid) => {
-    return new Promise((resolve, reject) => {
-      delPoetry(poetryid, (result) => {
-        if (result.success) {
-          resolve(result);
-        } else {
-          reject(new Error("删除诗歌数据失败"));
-        }
-      });
-    });
-  });
-
-  //添加作者
-  ipcMain.handle("db-add-writer", async (event, writer) => {
-    return new Promise((resolve, reject) => {
-      addWriter(writer, (result) => {
-        if (result.success) {
-          resolve(result);
-        } else {
-          reject(new Error("添加作者数据失败"));
         }
       });
     });

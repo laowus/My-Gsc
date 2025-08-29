@@ -2,8 +2,9 @@
 import { watch, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import Writer from "../model/Writer";
+import { ElMessage, ElMessageBox } from "element-plus";
 const { ipcRenderer } = window.require("electron");
-
+import EventBus from "../common/EventBus";
 const route = useRoute();
 const router = useRouter();
 
@@ -26,11 +27,12 @@ const getInfoList = () => {
 const fetchWriter = async () => {
   if (curWriterid.value) {
     ipcRenderer.invoke("db-get-writer-by-id", curWriterid.value).then((res) => {
-      console.log(res);
+      console.log(res.data.isdel);
       if (res.data) {
-        curWriter.value = new Writer(res.data.writerid, res.data.writername, res.data.dynastyid, res.data.summary);
+        curWriter.value = new Writer(res.data.writerid, res.data.writername, res.data.dynastyid, res.data.summary, [], res.data.isdel);
+        console.log(curWriter.value);
+
         if (curWriter.value) {
-          console.log("获取infolst");
           getInfoList();
         }
       }
@@ -55,6 +57,32 @@ watch(
 const goBack = () => {
   router.back();
 };
+
+const delWriter = () => {
+  ElMessageBox.confirm(`是否删除[${curWriter.value.writername}]?`, "删除", {
+    confirmButtonText: "删除",
+    cancelButtonText: "取消",
+    type: "warning"
+  })
+    .then(() => {
+      ipcRenderer.invoke("db-del-writer", curWriter.value.writerid).then((res) => {
+        if (res.success) {
+          ElMessage.success("删除成功");
+          EventBus.emit("refetchWriters");
+          router.back();
+        }
+      });
+    })
+    .catch(() => {
+      console.log("删除取消");
+    });
+};
+
+const editWriter = () => {
+  router.push({
+    path: "/editWriter/" + curWriter.value.writerid
+  });
+};
 </script>
 <template>
   <div class="writer-detail" v-if="curWriter">
@@ -63,7 +91,13 @@ const goBack = () => {
         <i class="iconfont icon-fanhui"></i>
       </div>
       <div>{{ curWriter.writername }} [{{ curWriter.dynastyname }}]</div>
-      <div class="ta-poetry" @click="router.push({ path: `/poetryList/`, query: { ty: 'writer', v: curWriter.writerid, n: curWriter.writername } })">TA的作品</div>
+      <div class="writer-ctr">
+        <div class="ctr-bar">
+          <i class="iconfont icon-shanchu" title="删除" @click="delWriter" v-if="curWriter.isdel != 0"></i>
+          <i class="iconfont icon-xiugai" title="编辑" @click="editWriter"></i>
+        </div>
+        <div class="ta-poetry" @click="router.push({ path: `/poetryList/`, query: { ty: 'writer', v: curWriter.writerid, n: curWriter.writername } })">TA的作品</div>
+      </div>
     </div>
     <div class="writer-content" v-html="curWriter.summary"></div>
     <div class="writer-info" v-if="curInfoList.length > 0">
@@ -78,6 +112,19 @@ const goBack = () => {
 </template>
 
 <style>
+.writer-ctr {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+}
+.ctr-bar {
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  justify-items: center;
+  align-items: center;
+}
+
 .writer-detail {
   display: flex;
   flex-direction: column;

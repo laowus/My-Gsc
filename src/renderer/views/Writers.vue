@@ -1,23 +1,28 @@
 <script setup>
 import { ref, onMounted, watch, toRaw } from "vue";
+import { storeToRefs } from "pinia";
 import { DYNASTYS } from "../common/utils";
 import Writer from "../model/Writer";
 import { useRouter } from "vue-router";
+import { useAppStore } from "../store/appStore";
 import getColor from "../common/colorUtils";
 import TxtEditor from "../components/TxtEditor.vue";
 import { ElMessage } from "element-plus";
+import EventBus from "../common/EventBus";
+const { writer_did } = storeToRefs(useAppStore());
+const { setWriter_did } = useAppStore();
 const { ipcRenderer } = window.require("electron");
 
 const router = useRouter();
 const addDialog = ref(false);
 const _writer = {
   writername: "",
-  dynastyid: 8,
+  dynastyid: writer_did.value,
   summary: ""
 };
 const curWriter = ref(_writer);
 
-const curdid = ref(7);
+const curdid = ref(writer_did.value);
 const writers = ref([]);
 const getWriters = async () => {
   try {
@@ -27,6 +32,7 @@ const getWriters = async () => {
         writers.value = res.data.map((item) => {
           return new Writer(item.writerid, item.writername, item.dynastyid, item.summary);
         });
+        setWriter_did(curdid.value);
         console.log(writers.value.length);
       }
     });
@@ -39,6 +45,7 @@ onMounted(async () => {
 });
 
 watch(curdid, async () => {
+  console.log("改变朝代", curdid.value);
   await getWriters();
 });
 
@@ -52,7 +59,11 @@ const dyOptions = () => {
 watch(addDialog, () => {
   if (addDialog.value) {
     //显示弹出框 添加诗歌 获取朝代id
-    curWriter.value = { ..._writer };
+    curWriter.value = {
+      writername: "",
+      dynastyid: writer_did.value,
+      summary: ""
+    };
   }
 });
 
@@ -61,14 +72,20 @@ const addWriter = () => {
     ElMessage.error("请输入作者名和内容");
     return;
   }
+  console.log(toRaw(curWriter.value));
   ipcRenderer.invoke("db-add-writer", toRaw(curWriter.value)).then((res) => {
     if (res.success) {
       ElMessage.success("添加成功");
       addDialog.value = false;
+      curdid.value = curWriter.value.dynastyid;
       getWriters();
     }
   });
 };
+
+EventBus.on("refetchWriters", () => {
+  getWriters();
+});
 </script>
 <template>
   <div class="writers">

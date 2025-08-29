@@ -36,6 +36,7 @@ export const useAppStore = defineStore("appStore", {
       this.lastAddPoetry = poetry;
     },
     setWriter_did(did) {
+      console.log("store改变朝代", did);
       this.writer_did = did;
     },
 

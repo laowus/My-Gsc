@@ -5,6 +5,7 @@ import { VIEWS } from "../common/utils.js";
 import PoetryList from "../components/PoetryList.vue";
 import writerDetail from "../components/writerDetail.vue";
 import editPoetry from "../components/editPoetry.vue";
+import editWriter from "../components/editWriter.vue";
 
 const routes = [
   {
@@ -60,6 +61,12 @@ const routes = [
     name: "编辑诗词",
     path: "/editPoetry/:id",
     component: editPoetry
+  },
+
+  {
+    name: "编辑作者",
+    path: "/editWriter/:id",
+    component: editWriter
   }
 ];
 

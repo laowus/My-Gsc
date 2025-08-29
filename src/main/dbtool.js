@@ -399,8 +399,8 @@ const get2Types = (callback) => {
 };
 
 const addWriter = (writer, callback) => {
-  const sql = `INSERT INTO Writer (dynastyid, writername, summary) VALUES (?, ?, ?)`;
-  db.run(sql, [writer.dynastyid, writer.writername, writer.summary], (err) => {
+  const sql = `INSERT INTO Writer (dynastyid, writername, summary, isdel) VALUES (?, ?, ?, ?)`;
+  db.run(sql, [writer.dynastyid, writer.writername, writer.summary, 1], (err) => {
     if (err) {
       console.error(err.message);
       callback({ success: false, error: err.message });
@@ -410,11 +410,38 @@ const addWriter = (writer, callback) => {
   });
 };
 
+const editWriter = (writer, callback) => {
+  const sql = `UPDATE Writer SET dynastyid = ?, writername = ?, summary = ? WHERE writerid = ?`;
+  db.run(sql, [writer.dynastyid, writer.writername, writer.summary, writer.writerid], (err) => {
+    if (err) {
+      console.error(err.message);
+      callback({ success: false, error: err.message });
+    } else {
+      callback({ success: true });
+    }
+  });
+};
+
+const delWriter = (writerid, callback) => {
+  const sql = `DELETE FROM Writer WHERE writerid = ?`;
+  db.run(sql, [writerid], (err) => {
+    if (err) {
+      console.error(err.message);
+      callback({ success: false, error: err.message });
+    } else {
+      callback({ success: true });
+    }
+  });
+};
+
 // 导出批量更新函数
 module.exports = {
   initDatabase,
   getAllPoetry,
   getPoetryByid,
+  addPoetry,
+  editPoetry,
+  delPoetry,
   getInfoList,
   getPoetryCount,
   getCountByKeyword,
@@ -426,13 +453,12 @@ module.exports = {
   getMyByPoetryid,
   changeMtid,
   getMyList,
-  editPoetry,
+  addInfo,
   editInfo,
   delInfo,
-  addInfo,
-  addPoetry,
   getTypesInIds,
   get2Types,
-  delPoetry,
-  addWriter
+  addWriter,
+  editWriter,
+  delWriter
 };
