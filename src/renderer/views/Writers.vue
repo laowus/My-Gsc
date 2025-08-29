@@ -2,11 +2,11 @@
 import { ref, onMounted, watch, toRaw } from "vue";
 import { DYNASTYS } from "../common/utils";
 import Writer from "../model/Writer";
-const { ipcRenderer } = window.require("electron");
 import { useRouter } from "vue-router";
 import getColor from "../common/colorUtils";
 import TxtEditor from "../components/TxtEditor.vue";
-import { ElMessage, ElMessageBox } from "element-plus";
+import { ElMessage } from "element-plus";
+const { ipcRenderer } = window.require("electron");
 
 const router = useRouter();
 const addDialog = ref(false);
