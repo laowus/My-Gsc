@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch, toRaw } from "vue";
+import { ref, onMounted, watch, toRaw, nextTick } from "vue";
 import { storeToRefs } from "pinia";
 import { DYNASTYS } from "../common/utils";
 import Writer from "../model/Writer";
@@ -24,6 +24,8 @@ const curWriter = ref(_writer);
 
 const curdid = ref(writer_did.value);
 const writers = ref([]);
+const dynastyRefs = ref([]);
+
 const getWriters = async () => {
   try {
     await ipcRenderer.invoke("db-get-writers-by-did", curdid.value).then((res) => {
@@ -42,13 +44,31 @@ const getWriters = async () => {
 };
 onMounted(async () => {
   await getWriters();
+  nextTick(() => {
+    const targetEl = dynastyRefs.value[curdid.value];
+    if (targetEl) targetEl.scrollIntoView({ block: "center" });
+  });
 });
 
-watch(curdid, async () => {
-  console.log("改变朝代", curdid.value);
+// watch(curdid, async () => {
+//   console.log("改变朝代", curdid.value);
+//   await getWriters();
+// });
+// 监听 curdid 变化，滚动到对应项
+watch(curdid, async (newVal) => {
+  // 确保 DOM 已更新
   await getWriters();
+  nextTick(() => {
+    const targetEl = dynastyRefs.value[newVal];
+    if (targetEl) {
+      // 平滑滚动到目标元素，垂直居中对齐
+      targetEl.scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+      });
+    }
+  });
 });
-
 const dyOptions = () => {
   // 从索引1开始截取数组，并映射为目标格式
   return DYNASTYS.slice(1).map((item, index) => ({
@@ -109,7 +129,7 @@ EventBus.on("refetchWriters", () => {
       </el-form>
     </el-dialog>
     <div class="writers-left">
-      <div class="dynasty-item" :class="{ dselected: curdid === index }" :style="{ backgroundColor: getColor(index) }" v-for="(item, index) in DYNASTYS" :key="index" @click="curdid = index">
+      <div class="dynasty-item" :class="{ dselected: curdid === index }" :style="{ backgroundColor: getColor(index) }" v-for="(item, index) in DYNASTYS" :key="index" @click="curdid = index" :ref="(el) => (dynastyRefs[index] = el)">
         {{ item }}
       </div>
     </div>

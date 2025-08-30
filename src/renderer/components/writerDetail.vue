@@ -5,6 +5,7 @@ import Writer from "../model/Writer";
 import { ElMessage, ElMessageBox } from "element-plus";
 const { ipcRenderer } = window.require("electron");
 import EventBus from "../common/EventBus";
+import { convertHtml, convertText } from "../common/fun";
 const route = useRoute();
 const router = useRouter();
 
@@ -99,14 +100,15 @@ const editWriter = () => {
         <div class="ta-poetry" @click="router.push({ path: `/poetryList/`, query: { ty: 'writer', v: curWriter.writerid, n: curWriter.writername } })">TA的作品</div>
       </div>
     </div>
-    <div class="writer-content" v-html="curWriter.summary"></div>
+    <div class="writer-content" v-html="convertHtml(curWriter.summary)"></div>
+
     <div class="writer-info" v-if="curInfoList.length > 0">
       <div class="writer-info-title">
         <div class="info-item-title" :class="{ 'title-select': curInfoIndex === index }" v-for="(item, index) in curInfoList" :key="item.id" @click="curInfoIndex = index">
           {{ item.title }}
         </div>
       </div>
-      <div class="info-content" v-html="curInfoList[curInfoIndex].content"></div>
+      <div class="info-content" v-html="convertHtml(curInfoList[curInfoIndex].content)"></div>
     </div>
   </div>
 </template>

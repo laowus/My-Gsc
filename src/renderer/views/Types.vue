@@ -2,9 +2,17 @@
 import { ref, onMounted, watch } from "vue";
 import getColor from "../common/colorUtils";
 const { ipcRenderer } = window.require("electron");
+import { ElMessage } from "element-plus";
 const ptypes = ref([]);
 const ctypes = ref([]);
 const curpid = ref(0);
+const addDialog = ref(false);
+const addType = ref({
+  typename: "",
+  parentid: 0
+});
+// 定义选中值变量
+const selectedType = ref(null);
 
 const fetchTypes = async () => {
   await ipcRenderer.invoke("db-get-types-by-pid", 0).then((res) => {
@@ -13,6 +21,8 @@ const fetchTypes = async () => {
     }
   });
   if (ptypes.value.length > 0) {
+    const options = tyOptions();
+    selectedType.value = options[0].value;
     const pid = ptypes.value[curpid.value].typeid;
     console.log(pid);
     const res1 = await ipcRenderer.invoke("db-get-types-by-pid", pid);
@@ -32,13 +42,53 @@ watch(curpid, async (newVal, oldVal) => {
     await fetchTypes();
   }
 });
+
+watch(addDialog, () => {
+  if (addDialog.value) {
+  }
+});
+
+const tyOptions = () => {
+  // 从索引1开始截取数组，并映射为目标格式
+  if (ptypes.value.length === 0) {
+    return [];
+  }
+
+  return ptypes.value.map((item) => ({
+    value: item.typeid,
+    label: item.typename
+  }));
+};
+
+const addType = () => {
+  if (addType.value.typename === "") {
+    ElMessage.error("请输入类型名称");
+    return;
+  }
+};
 </script>
 <template>
   <div class="types">
+    <el-dialog v-model="addDialog" title="添加类型" width="80%" align-center>
+      <el-form label-width="120px">
+        <el-form-item label="分类">
+          <el-select style="width: 100px; margin-right: 20px" v-model="addType.parentid">
+            <el-option v-for="item in tyOptions()" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+          <el-input v-model="addType.typename" placeholder="请输入类型名称" />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="addType"> 添加 </el-button>
+        </el-form-item>
+      </el-form>
+    </el-dialog>
     <div class="types-left">
       <div class="ptype-item" :class="{ dselected: curpid === index }" v-for="(item, index) in ptypes" :key="index" :style="{ backgroundColor: getColor(index) }" @click="curpid = index">{{ item.typename }}</div>
     </div>
     <div class="types-right">
+      <button class="icon-btn" @click="addDialog = true">
+        <span class="iconfont icon-jia" style="font-size: 30px"></span>
+      </button>
       <div class="horizontal-waterfall" v-if="ctypes.length > 0">
         <div v-for="(item, index) in ctypes" :key="index" :style="{ backgroundColor: getColor(index) }" class="item" @click="$router.push({ path: `/poetryList/`, query: { ty: 'type', v: item.typeid, n: item.typename } })">{{ item.typename }}</div>
       </div>

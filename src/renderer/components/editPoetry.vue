@@ -369,6 +369,7 @@ const addSaveInfo = () => {
   width: fit-content;
   display: flex;
   align-items: center;
+  cursor: pointer;
 }
 .title-select {
   background-color: #4caf50; /* 更改背景颜色为绿色 */
