@@ -161,7 +161,9 @@ const dbHandle = () => {
       getTypesByPid(pid, (result) => {
         if (result.success) {
           resolve(result);
+          console.log("获取子类型列表成功");
         } else {
+          console.log("获取作者列表失败");
           reject(new Error("获取作者列表失败"));
         }
       });

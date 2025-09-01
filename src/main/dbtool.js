@@ -442,7 +442,7 @@ const addType = (aType, callback) => {
       console.error(err.message);
       callback({ success: false, error: err.message });
     } else {
-      callback({ success: true, lastID: this.lastID });
+      callback({ success: true, lastID: this.lastID, parentid: aType.parentid });
     }
   });
 };

@@ -26,7 +26,9 @@ const fetchTypes = async () => {
   });
   if (ptypes.value.length > 0) {
     //从store里面获取当前类型的pid
+    console.log("当前类型的pid:", curPType.value);
     const res1 = await ipcRenderer.invoke("db-get-types-by-pid", curPType.value);
+    console.log("当前类型的子类型:", res1);
     if (res1.success) {
       ctypes.value = res1.data;
     }
@@ -75,8 +77,8 @@ const saveAddType = () => {
   ipcRenderer.invoke("db-add-type", toRaw(addType.value)).then((res) => {
     if (res.success) {
       addDialog.value = false;
-      fetchTypes();
       setCurPType(res.parentid);
+      fetchTypes();
       console.log(res);
       ElMessage.success("添加成功");
     } else {
