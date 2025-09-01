@@ -1,5 +1,5 @@
 const { ipcMain } = require("electron");
-const { getAllPoetry, getPoetryByid, getInfoList, getCountByKeyword, getWritersByDid, getTypesByPid, getWriterById, getRhesis, getCountByRhkeyword, getMyByPoetryid, changeMtid, getMyList, editPoetry, editInfo, delInfo, addInfo, addPoetry, getTypesInIds, get2Types, delPoetry, addWriter, editWriter, delWriter } = require("./dbtool");
+const { getAllPoetry, getPoetryByid, getInfoList, getCountByKeyword, getWritersByDid, getTypesByPid, getWriterById, getRhesis, getCountByRhkeyword, getMyByPoetryid, changeMtid, getMyList, editPoetry, editInfo, delInfo, addInfo, addPoetry, getTypesInIds, get2Types, delPoetry, addWriter, editWriter, delWriter, addType } = require("./dbtool");
 
 const dbHandle = () => {
   //** 诗歌相关 */
@@ -286,6 +286,19 @@ const dbHandle = () => {
           resolve(result);
         } else {
           reject(new Error("获取类别数据失败"));
+        }
+      });
+    });
+  });
+
+  //添加类别
+  ipcMain.handle("db-add-type", async (event, aType) => {
+    return new Promise((resolve, reject) => {
+      addType(aType, (result) => {
+        if (result.success) {
+          resolve(result);
+        } else {
+          reject(new Error("添加类别数据失败"));
         }
       });
     });

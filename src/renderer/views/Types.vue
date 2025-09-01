@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted, watch, toRaw } from "vue";
 import getColor from "../common/colorUtils";
 const { ipcRenderer } = window.require("electron");
 import { ElMessage } from "element-plus";
@@ -9,7 +9,7 @@ const curpid = ref(0);
 const addDialog = ref(false);
 const addType = ref({
   typename: "",
-  parentid: 0
+  parentid: 1
 });
 // 定义选中值变量
 const selectedType = ref(null);
@@ -60,25 +60,34 @@ const tyOptions = () => {
   }));
 };
 
-const addType = () => {
+const saveAddType = () => {
   if (addType.value.typename === "") {
     ElMessage.error("请输入类型名称");
     return;
   }
+  ipcRenderer.invoke("db-add-type", toRaw(addType.value)).then((res) => {
+    if (res.success) {
+      ElMessage.success("添加成功");
+      addDialog.value = false;
+      fetchTypes();
+    } else {
+      ElMessage.error(res.error);
+    }
+  });
 };
 </script>
 <template>
   <div class="types">
-    <el-dialog v-model="addDialog" title="添加类型" width="80%" align-center>
+    <el-dialog v-model="addDialog" title="添加类型" width="60%" align-center>
       <el-form label-width="120px">
         <el-form-item label="分类">
           <el-select style="width: 100px; margin-right: 20px" v-model="addType.parentid">
             <el-option v-for="item in tyOptions()" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
-          <el-input v-model="addType.typename" placeholder="请输入类型名称" />
+          <el-input v-model="addType.typename" placeholder="请输入类型名称" style="width: 200px" />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="addType"> 添加 </el-button>
+          <el-button type="primary" @click="saveAddType"> 添加 </el-button>
         </el-form-item>
       </el-form>
     </el-dialog>

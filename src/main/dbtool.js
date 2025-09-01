@@ -434,6 +434,18 @@ const delWriter = (writerid, callback) => {
   });
 };
 
+const addType = (aType, callback) => {
+  const sql = `INSERT INTO Type (typename, parentid) VALUES (?, ?)`;
+  db.run(sql, [aType.typename, aType.parentid], (err) => {
+    if (err) {
+      console.error(err.message);
+      callback({ success: false, error: err.message });
+    } else {
+      callback({ success: true, lastID: this.lastID });
+    }
+  });
+};
+
 // 导出批量更新函数
 module.exports = {
   initDatabase,
@@ -460,5 +472,6 @@ module.exports = {
   get2Types,
   addWriter,
   editWriter,
-  delWriter
+  delWriter,
+  addType
 };
