@@ -3,30 +3,30 @@ import { ref, onMounted, watch, toRaw } from "vue";
 import getColor from "../common/colorUtils";
 const { ipcRenderer } = window.require("electron");
 import { ElMessage } from "element-plus";
+import { useAppStore } from "../store/appStore";
+import { storeToRefs } from "pinia";
+const { curPType } = storeToRefs(useAppStore());
+const { setCurPType } = useAppStore();
+
 const ptypes = ref([]);
 const ctypes = ref([]);
-const curpid = ref(0);
 const addDialog = ref(false);
 const addType = ref({
   typename: "",
-  parentid: 1
+  parentid: curPType.value
 });
-// 定义选中值变量
-const selectedType = ref(null);
 
 const fetchTypes = async () => {
+  //获取一级类型(父级)
   await ipcRenderer.invoke("db-get-types-by-pid", 0).then((res) => {
     if (res.success) {
+      console.log(res);
       ptypes.value = res.data;
     }
   });
   if (ptypes.value.length > 0) {
-    const options = tyOptions();
-    selectedType.value = options[0].value;
-    const pid = ptypes.value[curpid.value].typeid;
-    console.log(pid);
-    const res1 = await ipcRenderer.invoke("db-get-types-by-pid", pid);
-    console.log(res1);
+    //从store里面获取当前类型的pid
+    const res1 = await ipcRenderer.invoke("db-get-types-by-pid", curPType.value);
     if (res1.success) {
       ctypes.value = res1.data;
     }
@@ -37,27 +37,34 @@ onMounted(async () => {
   await fetchTypes();
 });
 
-watch(curpid, async (newVal, oldVal) => {
+watch(curPType, async (newVal, oldVal) => {
   if (newVal !== oldVal) {
     await fetchTypes();
+    addType.value.parentid = newVal;
   }
 });
 
 watch(addDialog, () => {
   if (addDialog.value) {
+    console.log("打开addDialog");
+    addType.value.parentid = curPType.value;
+    console.log("addType.value.parentid:", addType.value.parentid);
   }
 });
 
 const tyOptions = () => {
-  // 从索引1开始截取数组，并映射为目标格式
   if (ptypes.value.length === 0) {
-    return [];
+    return [{ value: 0, label: "顶级" }];
   }
 
-  return ptypes.value.map((item) => ({
-    value: item.typeid,
-    label: item.typename
-  }));
+  // 在原有结果前添加顶级选项
+  return [
+    { value: 0, label: "顶级" },
+    ...ptypes.value.map((item) => ({
+      value: item.typeid,
+      label: item.typename
+    }))
+  ];
 };
 
 const saveAddType = () => {
@@ -67,11 +74,13 @@ const saveAddType = () => {
   }
   ipcRenderer.invoke("db-add-type", toRaw(addType.value)).then((res) => {
     if (res.success) {
-      ElMessage.success("添加成功");
       addDialog.value = false;
       fetchTypes();
+      setCurPType(res.parentid);
+      console.log(res);
+      ElMessage.success("添加成功");
     } else {
-      ElMessage.error(res.error);
+      ElMessage.error(res.message);
     }
   });
 };
@@ -92,7 +101,7 @@ const saveAddType = () => {
       </el-form>
     </el-dialog>
     <div class="types-left">
-      <div class="ptype-item" :class="{ dselected: curpid === index }" v-for="(item, index) in ptypes" :key="index" :style="{ backgroundColor: getColor(index) }" @click="curpid = index">{{ item.typename }}</div>
+      <div class="ptype-item" :class="{ dselected: curPType === item.typeid }" v-for="(item, index) in ptypes" :key="index" :style="{ backgroundColor: getColor(index) }" @click="setCurPType(item.typeid)">{{ item.typename }}</div>
     </div>
     <div class="types-right">
       <button class="icon-btn" @click="addDialog = true">

@@ -1,5 +1,5 @@
 const { ipcMain } = require("electron");
-const { getAllPoetry, getPoetryByid, getInfoList, getCountByKeyword, getWritersByDid, getTypesByPid, getWriterById, getRhesis, getCountByRhkeyword, getMyByPoetryid, changeMtid, getMyList, editPoetry, editInfo, delInfo, addInfo, addPoetry, getTypesInIds, get2Types, delPoetry, addWriter, editWriter, delWriter, addType } = require("./dbtool");
+const { getAllPoetry, getPoetryByid, getInfoList, getCountByKeyword, getWritersByDid, getTypesByPid, getWriterById, getRhesis, getCountByRhkeyword, getMyByPoetryid, changeMtid, getMyList, editPoetry, editInfo, delInfo, addInfo, addPoetry, getTypesInIds, get2Types, delPoetry, addWriter, editWriter, delWriter, addType, existType } = require("./dbtool");
 
 const dbHandle = () => {
   //** 诗歌相关 */
@@ -292,13 +292,39 @@ const dbHandle = () => {
   });
 
   //添加类别
+  // ipcMain.handle("db-add-type", async (event, aType) => {
+  //   return new Promise((resolve, reject) => {
+  //     addType(aType, (result) => {
+  //       if (result.success) {
+  //         resolve(result);
+  //       } else {
+  //         reject(new Error("添加类别数据失败"));
+  //       }
+  //     });
+  //   });
+  // });
+
   ipcMain.handle("db-add-type", async (event, aType) => {
     return new Promise((resolve, reject) => {
-      addType(aType, (result) => {
-        if (result.success) {
-          resolve(result);
+      existType(aType.typename, (res) => {
+        if (!res.success) {
+          console.error("查询失败:", res.error);
+          resolve({ success: false, message: "查询失败" });
+        }
+        if (res.exists) {
+          console.log("类型已存在");
+          resolve({ success: false, message: "类型已存在" });
         } else {
-          reject(new Error("添加类别数据失败"));
+          console.log("类型不存在");
+          addType(aType, (result) => {
+            console.log("类型不存在,进行添加后", result);
+            if (result.success) {
+              console.log(result);
+              resolve(result);
+            } else {
+              reject(new Error("添加类别数据失败"));
+            }
+          });
         }
       });
     });

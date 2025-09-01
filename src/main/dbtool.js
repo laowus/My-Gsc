@@ -170,6 +170,7 @@ const getWritersByDid = (dynastyid, callback) => {
 
 const getTypesByPid = (pid, callback) => {
   const sql = `SELECT * FROM Type where parentid=${pid}`;
+  console.log(sql);
   db.all(sql, (err, rows) => {
     if (err) {
       console.error(err.message);
@@ -333,7 +334,7 @@ const delInfo = (infoid, callback) => {
 const addInfo = (info, callback) => {
   const sql = `INSERT INTO Info (title, content, cateid ,fid) VALUES (?, ?, ?, ?)`;
 
-  db.run(sql, [info.title, info.content, info.cateid, info.fid], (err) => {
+  db.run(sql, [info.title, info.content, info.cateid, info.fid], function (err) {
     if (err) {
       console.error(err.message);
       callback({ success: false });
@@ -346,7 +347,7 @@ const addInfo = (info, callback) => {
 const addPoetry = (poetry, callback) => {
   const sql = `INSERT INTO Poetry (typeid, kindid, writerid, title, content, isdel) VALUES (?, ?, ?, ?, ?, ?)`;
 
-  db.run(sql, [poetry.typeids, poetry.kindid, poetry.writerid, poetry.title, poetry.content, 1], (err) => {
+  db.run(sql, [poetry.typeids, poetry.kindid, poetry.writerid, poetry.title, poetry.content, 1], function (err) {
     if (err) {
       console.error(err.message);
       callback({ success: false, error: err.message });
@@ -400,7 +401,7 @@ const get2Types = (callback) => {
 
 const addWriter = (writer, callback) => {
   const sql = `INSERT INTO Writer (dynastyid, writername, summary, isdel) VALUES (?, ?, ?, ?)`;
-  db.run(sql, [writer.dynastyid, writer.writername, writer.summary, 1], (err) => {
+  db.run(sql, [writer.dynastyid, writer.writername, writer.summary, 1], function (err) {
     if (err) {
       console.error(err.message);
       callback({ success: false, error: err.message });
@@ -436,12 +437,24 @@ const delWriter = (writerid, callback) => {
 
 const addType = (aType, callback) => {
   const sql = `INSERT INTO Type (typename, parentid) VALUES (?, ?)`;
-  db.run(sql, [aType.typename, aType.parentid], (err) => {
+  db.run(sql, [aType.typename, aType.parentid], function (err) {
     if (err) {
       console.error(err.message);
       callback({ success: false, error: err.message });
     } else {
       callback({ success: true, lastID: this.lastID });
+    }
+  });
+};
+
+const existType = (typename, callback) => {
+  const sql = `SELECT * FROM Type WHERE typename = ?`;
+  db.get(sql, [typename], (err, row) => {
+    if (err) {
+      console.error(err.message);
+      callback({ success: false, error: err.message });
+    } else {
+      callback({ success: true, exists: !!row });
     }
   });
 };
@@ -473,5 +486,6 @@ module.exports = {
   addWriter,
   editWriter,
   delWriter,
-  addType
+  addType,
+  existType
 };

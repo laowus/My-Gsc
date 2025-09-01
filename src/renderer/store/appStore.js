@@ -10,7 +10,8 @@ export const useAppStore = defineStore("appStore", {
     myTypes: ["未收藏", "唐诗", "宋词", "元曲", "文言文", "喜欢", "推荐"],
     start: 0,
     lastAddPoetry: { writerid: 1, typeid: "11", kindid: 1, title: "", content: "" },
-    writer_did: 7
+    writer_did: 7,
+    curPType: 1
   }),
   getters: {},
   actions: {
@@ -39,6 +40,10 @@ export const useAppStore = defineStore("appStore", {
       console.log("store改变朝代", did);
       this.writer_did = did;
     },
+    setCurPType(pid) {
+      console.log("store改变类型", pid);
+      this.curPType = pid;
+    },
 
     clearAppState() {
       // 重置为初始状态
@@ -52,7 +57,7 @@ export const useAppStore = defineStore("appStore", {
     strategies: [
       {
         storage: localStorage,
-        paths: ["curIndex", "keyword", "curRhIndex", "rhkeyword", "myTypes", "start", "lastAddPoetry", "writer_did"]
+        paths: ["curIndex", "keyword", "curRhIndex", "rhkeyword", "myTypes", "start", "lastAddPoetry", "writer_did", "curPType"]
       }
     ]
   }
