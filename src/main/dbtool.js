@@ -168,6 +168,18 @@ const getWritersByDid = (dynastyid, callback) => {
   });
 };
 
+const getWriterById = (writerid, callback) => {
+  const sql = `SELECT * FROM Writer where writerid=${writerid}`;
+  db.get(sql, (err, row) => {
+    if (err) {
+      console.error(err.message);
+      callback({ success: false });
+    } else {
+      callback({ success: true, data: row });
+    }
+  });
+};
+
 const getTypesByPid = (pid, callback) => {
   const sql = `SELECT * FROM Type where parentid=${pid}`;
   console.log(sql);
@@ -181,8 +193,8 @@ const getTypesByPid = (pid, callback) => {
   });
 };
 
-const getWriterById = (writerid, callback) => {
-  const sql = `SELECT * FROM Writer where writerid=${writerid}`;
+const getTypeById = (typeid, callback) => {
+  const sql = `SELECT * FROM Type where typeid=${typeid}`;
   db.get(sql, (err, row) => {
     if (err) {
       console.error(err.message);
@@ -459,6 +471,18 @@ const existType = (typename, callback) => {
   });
 };
 
+const editType = (eType, callback) => {
+  const sql = `UPDATE Type SET parentid = ?, typename = ? WHERE typeid = ?`;
+  db.run(sql, [eType.parentid, eType.typename, eType.typeid], (err) => {
+    if (err) {
+      console.error(err.message);
+      callback({ success: false, error: err.message });
+    } else {
+      callback({ success: true, parentid: eType.parentid });
+    }
+  });
+};
+
 // 导出批量更新函数
 module.exports = {
   initDatabase,
@@ -487,5 +511,7 @@ module.exports = {
   editWriter,
   delWriter,
   addType,
-  existType
+  existType,
+  getTypeById,
+  editType
 };

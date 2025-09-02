@@ -16,6 +16,9 @@ const addType = ref({
   parentid: curPType.value
 });
 
+const editDialog = ref(false);
+const editType = ref(null);
+
 const fetchTypes = async () => {
   //获取一级类型(父级)
   await ipcRenderer.invoke("db-get-types-by-pid", 0).then((res) => {
@@ -54,6 +57,11 @@ watch(addDialog, () => {
   }
 });
 
+watch(editDialog, () => {
+  if (editDialog.value) {
+  }
+});
+
 const tyOptions = () => {
   if (ptypes.value.length === 0) {
     return [{ value: 0, label: "顶级" }];
@@ -71,7 +79,7 @@ const tyOptions = () => {
 
 const saveAddType = () => {
   if (addType.value.typename === "") {
-    ElMessage.error("请输入类型名称");
+    ElMessage.error("类型不能为空!");
     return;
   }
   ipcRenderer.invoke("db-add-type", toRaw(addType.value)).then((res) => {
@@ -85,6 +93,38 @@ const saveAddType = () => {
       ElMessage.error(res.message);
     }
   });
+};
+
+const fetchEditType = (item) => {
+  ipcRenderer.invoke("db-get-type-by-id", item.typeid).then((res) => {
+    if (res.success) {
+      editType.value = res.data;
+      console.log(editType.value);
+      editDialog.value = true;
+    }
+  });
+};
+
+const saveEditType = () => {
+  if (editType.value.typename === "") {
+    ElMessage.error("类型不能为空!");
+    return;
+  }
+  ipcRenderer.invoke("db-edit-type", toRaw(editType.value)).then((res) => {
+    if (res.success) {
+      editDialog.value = false;
+      setCurPType(res.parentid);
+      fetchTypes();
+      console.log(res);
+      ElMessage.success("修改成功");
+    } else {
+      ElMessage.error(res.message);
+    }
+  });
+};
+
+const openNext = (item) => {
+  $router.push({ path: `/poetryList/`, query: { ty: "type", v: item.typeid, n: item.typename } });
 };
 </script>
 <template>
@@ -102,6 +142,19 @@ const saveAddType = () => {
         </el-form-item>
       </el-form>
     </el-dialog>
+    <el-dialog v-model="editDialog" title="修改类型" width="60%" align-center>
+      <el-form>
+        <el-form-item label="分类">
+          <el-select style="width: 100px; margin-right: 20px" v-model="editType.parentid">
+            <el-option v-for="item in tyOptions()" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+          <el-input v-model="editType.typename" style="width: 200px" />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="saveEditType">修改 </el-button>
+        </el-form-item>
+      </el-form>
+    </el-dialog>
     <div class="types-left">
       <div class="ptype-item" :class="{ dselected: curPType === item.typeid }" v-for="(item, index) in ptypes" :key="index" :style="{ backgroundColor: getColor(index) }" @click="setCurPType(item.typeid)">{{ item.typename }}</div>
     </div>
@@ -110,7 +163,7 @@ const saveAddType = () => {
         <span class="iconfont icon-jia" style="font-size: 30px"></span>
       </button>
       <div class="horizontal-waterfall" v-if="ctypes.length > 0">
-        <div v-for="(item, index) in ctypes" :key="index" :style="{ backgroundColor: getColor(index) }" class="item" @click="$router.push({ path: `/poetryList/`, query: { ty: 'type', v: item.typeid, n: item.typename } })">{{ item.typename }}</div>
+        <div v-for="(item, index) in ctypes" :key="index" :style="{ backgroundColor: getColor(index) }" class="item" @click="fetchEditType(item)">{{ item.typename }}</div>
       </div>
     </div>
   </div>

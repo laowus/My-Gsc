@@ -1,5 +1,5 @@
 const { ipcMain } = require("electron");
-const { getAllPoetry, getPoetryByid, getInfoList, getCountByKeyword, getWritersByDid, getTypesByPid, getWriterById, getRhesis, getCountByRhkeyword, getMyByPoetryid, changeMtid, getMyList, editPoetry, editInfo, delInfo, addInfo, addPoetry, getTypesInIds, get2Types, delPoetry, addWriter, editWriter, delWriter, addType, existType } = require("./dbtool");
+const { getAllPoetry, getPoetryByid, getInfoList, getCountByKeyword, getWritersByDid, getTypesByPid, getWriterById, getRhesis, getCountByRhkeyword, getMyByPoetryid, changeMtid, getMyList, editPoetry, editInfo, delInfo, addInfo, addPoetry, getTypesInIds, get2Types, delPoetry, addWriter, editWriter, delWriter, addType, existType, getTypeById, editType } = require("./dbtool");
 
 const dbHandle = () => {
   //** 诗歌相关 */
@@ -327,6 +327,31 @@ const dbHandle = () => {
               reject(new Error("添加类别数据失败"));
             }
           });
+        }
+      });
+    });
+  });
+
+  ipcMain.handle("db-get-type-by-id", async (event, typeid) => {
+    return new Promise((resolve, reject) => {
+      getTypeById(typeid, (result) => {
+        if (result.success) {
+          resolve(result);
+        } else {
+          reject(new Error("获取类别数据失败"));
+        }
+      });
+    });
+  });
+
+  //编辑类别
+  ipcMain.handle("db-edit-type", async (event, eType) => {
+    return new Promise((resolve, reject) => {
+      editType(eType, (result) => {
+        if (result.success) {
+          resolve(result);
+        } else {
+          reject(new Error("编辑类别数据失败"));
         }
       });
     });
