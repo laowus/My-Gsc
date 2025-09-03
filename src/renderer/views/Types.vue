@@ -2,12 +2,14 @@
 import { ref, onMounted, watch, toRaw } from "vue";
 import getColor from "../common/colorUtils";
 const { ipcRenderer } = window.require("electron");
-import { ElMessage } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
+import { useRouter } from "vue-router";
 import { useAppStore } from "../store/appStore";
 import { storeToRefs } from "pinia";
+
 const { curPType } = storeToRefs(useAppStore());
 const { setCurPType } = useAppStore();
-
+const router = useRouter();
 const ptypes = ref([]);
 const ctypes = ref([]);
 const addDialog = ref(false);
@@ -124,7 +126,28 @@ const saveEditType = () => {
 };
 
 const openNext = (item) => {
-  $router.push({ path: `/poetryList/`, query: { ty: "type", v: item.typeid, n: item.typename } });
+  router.push({ path: `/poetryList/`, query: { ty: "type", v: item.typeid, n: item.typename } });
+};
+
+const deleteType = (item) => {
+  ElMessageBox.confirm(`是否删除[${item.typename}]?`, "删除", {
+    confirmButtonText: "删除",
+    cancelButtonText: "取消",
+    type: "warning"
+  })
+    .then(() => {
+      ipcRenderer.invoke("db-delete-type", item.typeid).then((res) => {
+        if (res.success) {
+          ElMessage.success("删除成功");
+          fetchTypes();
+        } else {
+          ElMessage.error(res.message);
+        }
+      });
+    })
+    .catch(() => {
+      console.log("删除取消");
+    });
 };
 </script>
 <template>
@@ -163,7 +186,13 @@ const openNext = (item) => {
         <span class="iconfont icon-jia" style="font-size: 30px"></span>
       </button>
       <div class="horizontal-waterfall" v-if="ctypes.length > 0">
-        <div v-for="(item, index) in ctypes" :key="index" :style="{ backgroundColor: getColor(index) }" class="item" @click="fetchEditType(item)">{{ item.typename }}</div>
+        <div v-for="(item, index) in ctypes" :key="index" :style="{ backgroundColor: getColor(index) }" class="type-item">
+          <span class="item-name" @click="openNext(item)">{{ item.typename }}</span>
+          <div class="item-actions">
+            <span class="iconfont icon-xiugai" @click.stop="fetchEditType(item)"></span>
+            <span class="iconfont icon-shanchu" @click.stop="deleteType(item)" v-if="item.isdel === 1"></span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -171,32 +200,82 @@ const openNext = (item) => {
 
 <style>
 .horizontal-waterfall {
-  width: 90%;
-  height: 20px; /* 设置统一高度 */
-  column-count: auto; /* 自动计算列数 */
-  column-gap: 20px; /* 列间距 */
-  writing-mode: horizontal-tb; /* 水平排列 */
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  justify-content: flex-start;
   padding: 20px;
+  width: 90%;
 }
 
-.item {
-  break-inside: avoid; /* 避免元素内部断行 */
-  display: inline-block; /* 内联块元素 */
-  width: auto; /* 宽度自动 */
-  height: 100%; /* 高度统一 */
+.type-item {
+  break-inside: avoid;
+  display: inline-block;
+  width: auto;
+  height: 100%;
   background-color: #f0f0f0;
   margin-bottom: 10px;
   padding: 10px;
   margin: 10px;
   border-radius: 10px;
   font-size: 16px;
+  position: relative;
 }
-.item:hover {
-  transform: translateY(-5px); /* 悬停上移效果 */
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15); /* 悬停阴影加深 */
+.type-item:hover .item-actions {
+  display: flex;
+  gap: 10px;
   cursor: pointer;
 }
+.icon-xiugai {
+  color: #409eff;
+  border-color: #b3d8ff;
+  background-color: #ecf5ff;
+}
 
+.icon-shanchu {
+  color: #f56c6c;
+  border-color: #fab6b6;
+  background-color: #fef0f0;
+}
+
+.item-actions span:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  opacity: 1;
+}
+
+.icon-xiugai:hover {
+  background-color: #d0ebff;
+  border-color: #8cc5ff;
+}
+
+.icon-shanchu:hover {
+  background-color: #fde2e2;
+  border-color: #f8a3a3;
+}
+
+.item-actions span:hover {
+  background-color: white;
+  transform: scale(1.1);
+}
+.item-actions {
+  display: none;
+  position: absolute;
+  right: -15px;
+  top: -10px;
+}
+
+.item-actions span {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+  text-align: center;
+  border-radius: 6px;
+  border: 1px solid;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
 .types {
   height: 100%;
   display: flex;

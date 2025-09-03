@@ -46,26 +46,37 @@ onMounted(async () => {
   await getWriters();
   nextTick(() => {
     const targetEl = dynastyRefs.value[curdid.value];
-    if (targetEl) targetEl.scrollIntoView({ block: "center" });
+    const container = document.querySelector(".writers-left");
+    if (targetEl && container) {
+      scrollToElement(targetEl, container);
+    }
   });
 });
 
-// watch(curdid, async () => {
-//   console.log("改变朝代", curdid.value);
-//   await getWriters();
-// });
+const scrollToElement = (element, container) => {
+  if (!element || !container) return;
+  // 计算元素在容器中的相对位置
+  const relativeTop = element.offsetTop - container.offsetTop;
+  const containerHeight = container.clientHeight;
+  const elementHeight = element.clientHeight;
+
+  // 计算滚动位置使元素居中
+  const scrollTop = relativeTop - (containerHeight - elementHeight) / 2;
+
+  container.scrollTo({
+    top: scrollTop,
+    behavior: "smooth"
+  });
+};
 // 监听 curdid 变化，滚动到对应项
 watch(curdid, async (newVal) => {
   // 确保 DOM 已更新
   await getWriters();
   nextTick(() => {
     const targetEl = dynastyRefs.value[newVal];
-    if (targetEl) {
-      // 平滑滚动到目标元素，垂直居中对齐
-      targetEl.scrollIntoView({
-        behavior: "smooth",
-        block: "center"
-      });
+    const container = document.querySelector(".writers-left");
+    if (targetEl && container) {
+      scrollToElement(targetEl, container);
     }
   });
 });
@@ -138,7 +149,7 @@ EventBus.on("refetchWriters", () => {
         <span class="iconfont icon-jia" style="font-size: 30px"></span>
       </button>
       <div class="horizontal-waterfall" v-if="writers.length > 0">
-        <div v-for="(item, index) in writers" :key="index" :style="{ backgroundColor: getColor(index) }" class="item" @click="router.push({ path: `/writerDetail/${item.writerid}` })">{{ item.writername }}</div>
+        <div v-for="(item, index) in writers" :key="index" :style="{ backgroundColor: getColor(index) }" class="writer-item" @click="router.push({ path: `/writerDetail/${item.writerid}` })">{{ item.writername }}</div>
       </div>
     </div>
   </div>
@@ -154,7 +165,7 @@ EventBus.on("refetchWriters", () => {
   padding: 20px;
 }
 
-.item {
+.writer-item {
   break-inside: avoid; /* 避免元素内部断行 */
   display: inline-block; /* 内联块元素 */
   width: auto; /* 宽度自动 */
@@ -166,7 +177,7 @@ EventBus.on("refetchWriters", () => {
   border-radius: 10px;
   font-size: 16px;
 }
-.item:hover {
+.writer-item:hover {
   transform: translateY(-5px); /* 悬停上移效果 */
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15); /* 悬停阴影加深 */
   cursor: pointer;

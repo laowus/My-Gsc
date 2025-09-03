@@ -448,7 +448,7 @@ const delWriter = (writerid, callback) => {
 };
 
 const addType = (aType, callback) => {
-  const sql = `INSERT INTO Type (typename, parentid) VALUES (?, ?)`;
+  const sql = `INSERT INTO Type (typename, parentid, isdel) VALUES (?, ?, 1)`;
   db.run(sql, [aType.typename, aType.parentid], function (err) {
     if (err) {
       console.error(err.message);
@@ -483,6 +483,18 @@ const editType = (eType, callback) => {
   });
 };
 
+const delType = (typeid, callback) => {
+  const sql = `DELETE FROM Type WHERE typeid = ?`;
+  db.run(sql, [typeid], (err) => {
+    if (err) {
+      console.error(err.message);
+      callback({ success: false, error: err.message });
+    } else {
+      callback({ success: true });
+    }
+  });
+};
+
 // 导出批量更新函数
 module.exports = {
   initDatabase,
@@ -513,5 +525,6 @@ module.exports = {
   addType,
   existType,
   getTypeById,
-  editType
+  editType,
+  delType
 };

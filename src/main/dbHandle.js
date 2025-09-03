@@ -1,5 +1,5 @@
 const { ipcMain } = require("electron");
-const { getAllPoetry, getPoetryByid, getInfoList, getCountByKeyword, getWritersByDid, getTypesByPid, getWriterById, getRhesis, getCountByRhkeyword, getMyByPoetryid, changeMtid, getMyList, editPoetry, editInfo, delInfo, addInfo, addPoetry, getTypesInIds, get2Types, delPoetry, addWriter, editWriter, delWriter, addType, existType, getTypeById, editType } = require("./dbtool");
+const { getAllPoetry, getPoetryByid, getInfoList, getCountByKeyword, getWritersByDid, getTypesByPid, getWriterById, getRhesis, getCountByRhkeyword, getMyByPoetryid, changeMtid, getMyList, editPoetry, editInfo, delInfo, addInfo, addPoetry, getTypesInIds, get2Types, delPoetry, addWriter, editWriter, delWriter, addType, existType, getTypeById, editType, delType } = require("./dbtool");
 
 const dbHandle = () => {
   //** 诗歌相关 */
@@ -352,6 +352,19 @@ const dbHandle = () => {
           resolve(result);
         } else {
           reject(new Error("编辑类别数据失败"));
+        }
+      });
+    });
+  });
+
+  //删除类别
+  ipcMain.handle("db-delete-type", async (event, typeid) => {
+    return new Promise((resolve, reject) => {
+      delType(typeid, (result) => {
+        if (result.success) {
+          resolve(result);
+        } else {
+          reject(new Error("删除类别数据失败"));
         }
       });
     });
