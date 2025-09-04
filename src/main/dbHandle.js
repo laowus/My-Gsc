@@ -1,5 +1,5 @@
 const { ipcMain } = require("electron");
-const { getAllPoetry, getPoetryByid, getInfoList, getCountByKeyword, getWritersByDid, getTypesByPid, getWriterById, getRhesis, getCountByRhkeyword, getMyByPoetryid, changeMtid, getMyList, editPoetry, editInfo, delInfo, addInfo, addPoetry, getTypesInIds, get2Types, delPoetry, addWriter, editWriter, delWriter, addType, existType, getTypeById, editType, delType } = require("./dbtool");
+const { getAllPoetry, getPoetryByid, getInfoList, getCountByKeyword, getWritersByDid, getTypesByPid, getWriterById, getRhesis, getCountByRhkeyword, getMyByPoetryid, changeMtid, getMyList, editPoetry, editInfo, delInfo, addInfo, addPoetry, getTypesInIds, get2Types, delPoetry, addWriter, editWriter, delWriter, addType, existType, getTypeById, editType, delType, getPoetrysByRcontent, addRhesis } = require("./dbtool");
 
 const dbHandle = () => {
   //** 诗歌相关 */
@@ -365,6 +365,30 @@ const dbHandle = () => {
           resolve(result);
         } else {
           reject(new Error("删除类别数据失败"));
+        }
+      });
+    });
+  });
+
+  ipcMain.handle("db-get-poetrys-by-rcontent", async (event, rcontent) => {
+    return new Promise((resolve, reject) => {
+      getPoetrysByRcontent(rcontent, (result) => {
+        if (result.success) {
+          resolve(result);
+        } else {
+          reject(new Error("获取诗词数据失败"));
+        }
+      });
+    });
+  });
+
+  ipcMain.handle("db-add-rhesis", async (event, rhesis) => {
+    return new Promise((resolve, reject) => {
+      addRhesis(rhesis, (result) => {
+        if (result.success) {
+          resolve(result);
+        } else {
+          reject(new Error("添加评论数据失败"));
         }
       });
     });

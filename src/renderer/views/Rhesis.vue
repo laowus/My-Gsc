@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, nextTick } from "vue";
+import { ref, onMounted, nextTick, toRaw } from "vue";
 import { storeToRefs } from "pinia";
 import { useAppStore } from "../store/appStore";
 import PoetryDetail from "../components/PoetryDetail.vue";
@@ -50,9 +50,9 @@ const handleRhesisClick = (index) => {
   setCurRhIndex(index);
   curPoetry.value = rhesisList.value[index];
 };
+//滚动到当前位置
 const handleScroll = () => {
   if (scrollerRef.value) {
-    console.log("滚动到", curRhIndex.value);
     scrollerRef.value.scrollToItem(curRhIndex.value);
   }
 };
@@ -79,25 +79,54 @@ const search = () => {
   });
 };
 
-const searchPoetry = () => {
+const searchPoetry = (event) => {
+  // 阻止表单默认提交行为
+  if (event) {
+    event.preventDefault();
+  }
   const _rcontent = addRhesis.value.rcontent.trim();
   if (_rcontent.length === 0) {
-    alert("请输入名句内容");
+    ElMessage.error("请输入名句内容");
     return;
   }
   //去数据库哪里获取值,如果没有就提示,不保存
-  ipcRenderer.invoke("db-get-poetry-by-rcontent", _rcontent).then((res) => {
+  ipcRenderer.invoke("db-get-poetrys-by-rcontent", _rcontent).then((res) => {
     if (res.success) {
       console.log("getPoetryByRcontent", res);
       if (res.data.length > 0) {
-        rhesisList.value = res.data;
+        poetryList.value = res.data;
+        addRhesis.value.poetryid = res.data[0].poetryid;
       } else {
-        alert(`名句: [${_rcontent}] 没有符合条件的诗歌,请重新输入`);
+        ElMessage.error(`名句: [${_rcontent}] 没有符合条件的诗歌,请重新输入`);
         return;
       }
     } else {
-      alert("获取诗歌失败");
+      ElMessage.error("获取诗歌失败");
       return;
+    }
+  });
+};
+
+const saveRhesis = () => {
+  console.log(addRhesis.value);
+  if (addRhesis.value.rcontent.length === 0) {
+    ElMessage.error("请输入名句内容");
+    return;
+  }
+  ipcRenderer.invoke("db-add-rhesis", toRaw(addRhesis.value)).then((res) => {
+    if (res.success) {
+      ElMessage.success(`添加[ ${addRhesis.value.rcontent} ]成功`);
+      setCurRhIndex(rhesisList.value.length);
+      fetchPoetrys().then(() => {
+        nextTick(() => handleScroll());
+      });
+      addRhesis.value = {
+        rcontent: "",
+        poetryid: 0
+      };
+      addDialog.value = false;
+    } else {
+      ElMessage.error("添加失败");
     }
   });
 };
@@ -108,16 +137,23 @@ const searchPoetry = () => {
       <el-form label-width="120px">
         <el-form-item label="名句内容">
           <el-input v-model="addRhesis.rcontent" style="width: 300px; margin-right: 10px"> </el-input>
-          <button class="icon-btn" @click="searchPoetry">
+          <button type="button" class="icon-btn" @click="searchPoetry">
             <span class="iconfont icon-sousuobeifen2" style="font-size: 30px"></span>
           </button>
         </el-form-item>
-        <el-form-item label="选择诗歌" v-if="poetryList.length > 0">
-          <el-select v-model="addRhesis.poetryid" placeholder="请选择诗歌" style="width: 300px">
-            <el-option v-for="item in rhesisList" :key="item.poetryid" :label="item.title + ' - ' + item.writername" :value="item.poetryid" />
-          </el-select>
-          <div>当前选择:</div>
-        </el-form-item>
+        <div v-if="poetryList.length > 0">
+          <el-form-item label="选择诗歌">
+            <el-select v-model="addRhesis.poetryid" placeholder="请选择诗歌" style="width: 300px">
+              <el-option v-for="item in poetryList" :key="item.poetryid" :label="item.title + ' - ' + item.writername" :value="item.poetryid" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="内容">
+            <div class="poetry-content" v-html="poetryList.find((item) => item.poetryid === addRhesis.poetryid)?.content"></div>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="saveRhesis"> 添加 </el-button>
+          </el-form-item>
+        </div>
       </el-form>
     </el-dialog>
     <div class="rhesiss-left">
@@ -201,6 +237,19 @@ const searchPoetry = () => {
   background-color: #f8f4d2 !important;
   border-color: #ccc875;
   animation: pulse 1s ease-in-out infinite;
+}
+
+.poetry-content {
+  font-size: 1.2rem;
+  line-height: 1.8;
+  color: #333;
+  padding: 10px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  max-height: 30vh;
+  overflow-y: auto;
+  max-width: 100%;
+  width: fit-content;
 }
 
 @keyframes pulse {

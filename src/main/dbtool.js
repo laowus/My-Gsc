@@ -495,6 +495,30 @@ const delType = (typeid, callback) => {
   });
 };
 
+const getPoetrysByRcontent = (rcontent, callback) => {
+  const sql = ` select p.poetryid, p.kindid, p.typeid, w.dynastyid,w.writerid,w.writername,p.title, p.content from Poetry p join Writer w on p.writerid = w.writerid WHERE p.content LIKE '%${rcontent}%'`;
+  db.all(sql, (err, rows) => {
+    if (err) {
+      console.error(err.message);
+      callback({ success: false, error: err.message });
+    } else {
+      callback({ success: true, data: rows });
+    }
+  });
+};
+
+const addRhesis = (rhesis, callback) => {
+  const sql = `INSERT INTO Rhesis (poetryid, rcontent, isdel) VALUES (?, ?, 1)`;
+  db.run(sql, [rhesis.poetryid, rhesis.rcontent], function (err) {
+    if (err) {
+      console.error(err.message);
+      callback({ success: false, error: err.message });
+    } else {
+      callback({ success: true, lastID: this.lastID });
+    }
+  });
+};
+
 // 导出批量更新函数
 module.exports = {
   initDatabase,
@@ -526,5 +550,7 @@ module.exports = {
   existType,
   getTypeById,
   editType,
-  delType
+  delType,
+  getPoetrysByRcontent,
+  addRhesis
 };
