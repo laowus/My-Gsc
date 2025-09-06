@@ -1,6 +1,6 @@
 @font-face {
   font-family: "iconfont"; /* Project id 4970692 */
-  src: url('iconfont.ttf?t=1756206851981') format('truetype');
+  src: url('iconfont.ttf?t=1757156175639') format('truetype');
 }
 
 .iconfont {
@@ -9,6 +9,10 @@
   font-style: normal;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-gengduo:before {
+  content: "\e6e7";
 }
 
 .icon-shanchu:before {

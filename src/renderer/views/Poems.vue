@@ -10,7 +10,7 @@ import TxtEditor from "../components/TxtEditor.vue";
 import { DYNASTYS, KINDS } from "../common/utils";
 import { convertTypeidToArray } from "../common/fun";
 import EventBus from "../common/EventBus";
-import { ElMessage, ElMessageBox } from "element-plus";
+import { ElMessage, ElDropdown } from "element-plus";
 const { ipcRenderer } = window.require("electron");
 
 const scrollerRef = ref(null);
@@ -254,12 +254,34 @@ watch(addDialog, () => {
           <input type="text" placeholder="输入关键字" class="search-input" :value="keyword" />
           <span class="title-count">( {{ curIndex + 1 }}/ {{ poetryList.length }})</span>
         </div>
-        <button class="icon-btn" @click="search">
+        <button class="icon-btn" @click="search" title="搜索">
           <span class="iconfont icon-sousuobeifen2" style="font-size: 30px"></span>
         </button>
-        <button class="icon-btn" @click="addDialog = true">
+        <button class="icon-btn" @click="addDialog = true" title="添加诗歌">
           <span class="iconfont icon-jia" style="font-size: 30px"></span>
         </button>
+        <!-- 替换原有的导出按钮 -->
+        <el-dropdown trigger="click" @command="handleExport">
+          <button class="icon-btn" title="导出">
+            <span class="iconfont icon-gengduo" style="font-size: 18px"></span>
+          </button>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="html">
+                <span class="iconfont icon-html" style="margin-right: 8px"></span>
+                导出为 HTML
+              </el-dropdown-item>
+              <el-dropdown-item command="txt">
+                <span class="iconfont icon-txt" style="margin-right: 8px"></span>
+                导出为 TXT
+              </el-dropdown-item>
+              <el-dropdown-item command="epub">
+                <span class="iconfont icon-epub" style="margin-right: 8px"></span>
+                导出为 EPUB
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
       </div>
       <div class="poems-left-content" v-if="poetryList.length > 0">
         <RecycleScroller ref="scrollerRef" class="scroller" :items="poetryList" :item-size="120" key-field="poetryid" v-slot="{ item, index }">
@@ -277,6 +299,24 @@ watch(addDialog, () => {
   </div>
 </template>
 <style>
+.el-dropdown-menu {
+  min-width: 140px;
+}
+
+.el-dropdown-menu__item {
+  display: flex;
+  align-items: center;
+}
+
+.icon-html:before {
+  content: "🌐";
+}
+.icon-txt:before {
+  content: "📝";
+}
+.icon-epub:before {
+  content: "📚";
+}
 .mr10 {
   margin-right: 10px;
 }
