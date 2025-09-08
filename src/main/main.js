@@ -2,8 +2,11 @@ process.env["ELECTRON_DISABLE_SECURITY_WARNINGS"] = "true";
 const { app, BrowserWindow, ipcMain, Menu, dialog, Tray } = require("electron");
 const isDevEnv = process.env["NODE_ENV"] === "dev";
 const path = require("path");
+const fs = require("fs");
 const { publicDir } = require("./pathUtils");
 const { initDatabase } = require("./dbtool");
+const { createEpub } = require("./createEpub");
+const { createTxt } = require("./createTxt");
 const Store = require("electron-store");
 const store = new Store();
 const dbHandle = require("./dbhandle");
@@ -148,6 +151,59 @@ ipcMain.on("window-max", (event) => {
     win.maximize();
   }
 });
+
+//导出成html txt epub
+
+ipcMain.on("export-txt", async (event, poetryList) => {
+  //获取当前日期时间
+  const now = new Date();
+  const timestamp = now.getTime();
+  const fileName = `诗歌_${timestamp}.txt`;
+  try {
+    // 弹出保存对话框
+    const { filePath } = await dialog.showSaveDialog({
+      title: "保存 Txt 文件",
+      defaultPath: fileName,
+      filters: [
+        { name: "Txt 文件", extensions: ["txt"] },
+        { name: "所有文件", extensions: ["*"] }
+      ]
+    });
+
+    if (!filePath) {
+      event.sender.send("export-txt-reply", {
+        success: false,
+        message: "用户取消保存"
+      });
+    } else {
+      await createTxt(poetryList, mainWin).then((txtContent) => {
+        if (mainWin && mainWin.webContents) {
+          mainWin.webContents.send("hidetip");
+        }
+        fs.writeFile(filePath, txtContent, (err) => {
+          if (err) {
+            event.sender.send("export-txt-reply", {
+              success: false,
+              message: "文件写入失败,请重试或者检查文件!"
+            });
+          } else {
+            event.sender.send("export-txt-reply", {
+              success: true,
+              message: fileName + " 导出成功!"
+            });
+          }
+        });
+      });
+      return { success: true, filePath };
+    }
+  } catch (error) {
+    event.sender.send("export-txt-reply", {
+      success: false,
+      message: "文件写入失败,请重试或者检查文件!"
+    });
+  }
+});
+
 const sendToRenderer = (channel, args) => {
   try {
     if (mainWin) mainWin.webContents.send(channel, args);
@@ -202,6 +258,7 @@ const init = () => {
     sendToRenderer("app-quit");
   });
 };
+
 const initWindowBounds = (win) => {
   store.get("mainWindowWidth") || store.set("mainWindowWidth", win.getSize()[0]);
   store.get("mainWindowHeight") || store.set("mainWindowHeight", win.getSize()[1]);

@@ -11,7 +11,10 @@ export const useAppStore = defineStore("appStore", {
     start: 0,
     lastAddPoetry: { writerid: 1, typeid: "11", kindid: 1, title: "", content: "" },
     writer_did: 7,
-    curPType: 1
+    curPType: 1,
+    // 通用弹窗
+    tipShow: false,
+    tipText: null
   }),
   getters: {},
   actions: {
@@ -50,6 +53,14 @@ export const useAppStore = defineStore("appStore", {
       this.$reset();
       // 清除持久化存储
       localStorage.removeItem("appStore");
+    },
+    showTip(text) {
+      this.tipShow = true;
+      this.tipText = text;
+    },
+    hideTip() {
+      this.tipShow = false;
+      this.tipText = null;
     }
   },
   persist: {

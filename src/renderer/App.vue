@@ -3,6 +3,8 @@ import { onMounted, onUnmounted, ref } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import leftMenu from "./components/leftMenu.vue";
 import maxMinCancel from "./components/maxMinClose.vue";
+import EventBus from "./common/EventBus";
+import Popovers from "./components/Popovers.vue";
 const { shell } = window.require("electron");
 // 右键菜单状态
 const showContextMenu = ref(false);
@@ -78,6 +80,7 @@ onUnmounted(() => {
 
 <template>
   <div class="container">
+    <Popovers @click.stop></Popovers>
     <div class="custom-context-menu" v-if="showContextMenu" :style="{ left: menuX + 'px', top: menuY + 'px' }">
       <button @click="copySelectedText">复制</button>
       <button @click="searchBaidu">搜索百度</button>

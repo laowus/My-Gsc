@@ -216,6 +216,23 @@ watch(addDialog, () => {
     fetchWriter();
   }
 });
+
+const handleExport = async (format) => {
+  console.log("选择的导出格式:", format);
+  if (format === "txt" && poetryList.value.length > 0) {
+    ipcRenderer.once("export-txt-reply", (event, res) => {
+      console.log(res);
+      if (res.success) {
+        ElMessage.success(`导出成功!`);
+      } else {
+        ElMessage.error(res.message);
+      }
+    });
+    ipcRenderer.send("export-txt", toRaw(poetryList.value));
+  } else {
+    ElMessage.error("当前没有诗歌可以导出");
+  }
+};
 </script>
 <template>
   <div class="poems">
