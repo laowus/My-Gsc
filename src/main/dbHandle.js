@@ -1,7 +1,7 @@
 const { ipcMain } = require("electron");
 const { getAllPoetry, getPoetryByid, getInfoList, getCountByKeyword, getWritersByDid, getTypesByPid, getWriterById, getRhesis, getCountByRhkeyword, getMyByPoetryid, changeMtid, getMyList, editPoetry, editInfo, delInfo, addInfo, addPoetry, getTypesInIds, get2Types, delPoetry, addWriter, editWriter, delWriter, addType, existType, getTypeById, editType, delType, getPoetrysByRcontent, addRhesis } = require("./dbtool");
 
-const dbHandle = () => {
+const dbhandle = () => {
   //** 诗歌相关 */
   ipcMain.handle("db-get-all-poetry", (event, params) => {
     return new Promise((resolve, reject) => {
@@ -395,4 +395,4 @@ const dbHandle = () => {
   });
 };
 
-module.exports = dbHandle;
+module.exports = dbhandle;

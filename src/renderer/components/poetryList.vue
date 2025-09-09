@@ -5,6 +5,7 @@ import Poetry from "../model/Poetry";
 import Writer from "../model/Writer";
 import KindIcon from "../components/KindIcon.vue";
 import PoetryDetail from "../components/poetryDetail.vue";
+import { ElMessage, ElDropdown } from "element-plus";
 const { ipcRenderer } = window.require("electron");
 
 const route = useRoute();
@@ -61,14 +62,74 @@ const handlePoemClick = (index) => {
 const goBack = () => {
   router.go(-1);
 };
+
+const handleExport = async (format) => {
+  console.log("选择的导出格式:", format);
+  if (format === "txt" && poetryList.value.length > 0) {
+    ipcRenderer.once("export-txt-reply", (event, res) => {
+      console.log(res);
+      if (res.success) {
+        ElMessage.success(`导出成功!`);
+      } else {
+        ElMessage.error(res.message);
+      }
+    });
+    ipcRenderer.send("export-txt", curName.value, toRaw(poetryList.value));
+  } else if (format === "html" && poetryList.value.length > 0) {
+    ipcRenderer.once("export-html-reply", (event, res) => {
+      console.log(res);
+      if (res.success) {
+        ElMessage.success(`导出成功!`);
+      } else {
+        ElMessage.error(res.message);
+      }
+    });
+    ipcRenderer.send("export-html", curName.value, toRaw(poetryList.value));
+  } else if (format === "epub" && poetryList.value.length > 0) {
+    ipcRenderer.once("export-epub-reply", (event, res) => {
+      console.log(res);
+      if (res.success) {
+        ElMessage.success(`导出成功!`);
+      } else {
+        ElMessage.error(res.message);
+      }
+    });
+    ipcRenderer.send("export-epub", curName.value, toRaw(poetryList.value));
+  } else {
+    ElMessage.error("当前没有诗歌可以导出");
+  }
+};
 </script>
 
 <template>
   <div class="poetrys">
     <div class="poetrys-left">
-      <div class="return" @click="goBack">
-        <i class="iconfont icon-fanhui"></i>
+      <div class="return">
+        <button class="icon-btn" @click="goBack">
+          <span class="iconfont icon-fanhui"></span>
+        </button>
         <div class="info">[ {{ curName }} ] ( {{ curIndex + 1 }} /{{ poetryList.length }} )</div>
+        <el-dropdown trigger="click" @command="handleExport">
+          <button class="icon-btn" title="导出">
+            <span class="iconfont icon-gengduo" style="font-size: 18px"></span>
+          </button>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="html">
+                <span class="iconfont icon-html" style="margin-right: 8px"></span>
+                导出为 HTML
+              </el-dropdown-item>
+              <el-dropdown-item command="txt">
+                <span class="iconfont icon-txt" style="margin-right: 8px"></span>
+                导出为 TXT
+              </el-dropdown-item>
+              <el-dropdown-item command="epub">
+                <span class="iconfont icon-epub" style="margin-right: 8px"></span>
+                导出为 EPUB
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
       </div>
       <div class="poetrys-left-content" v-if="poetryList.length > 0">
         <RecycleScroller class="scroller" :items="poetryList" :item-size="120" key-field="poetryid" v-slot="{ item, index }">
@@ -89,11 +150,10 @@ const goBack = () => {
 <style>
 .return {
   padding: 10px;
-  cursor: pointer;
   display: flex;
   flex-direction: row;
-  align-items: center;
   gap: 20px;
+  justify-content: space-between;
 }
 .info {
   font-size: 16px;

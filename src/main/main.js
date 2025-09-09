@@ -11,7 +11,7 @@ const { createHtml } = require("./createHtml");
 
 const Store = require("electron-store");
 const store = new Store();
-const dbHandle = require("./dbhandle");
+const dbhandle = require("./dbhandle");
 
 let mainWin = null,
   tray = null;
@@ -38,7 +38,7 @@ if (!singleInstance) {
   });
 }
 
-dbHandle();
+dbhandle();
 
 const startup = () => {
   init();
@@ -167,12 +167,19 @@ ipcMain.on("window-max", (event) => {
 
 //导出成html txt epub
 
-ipcMain.on("export-txt", async (event, poetryList) => {
+ipcMain.on("export-txt", async (event, fname, poetryList) => {
   //获取当前日期时间
   const now = new Date();
   const timestamp = now.getTime();
-  const fileName = `诗歌_${timestamp}.txt`;
+  const fileName = `${fname}_${timestamp}.txt`;
   try {
+    // 保存当前窗口的置顶状态
+    const wasAlwaysOnTop = mainWin.isAlwaysOnTop();
+
+    // 临时取消置顶状态
+    if (wasAlwaysOnTop) {
+      mainWin.setAlwaysOnTop(false);
+    }
     // 弹出保存对话框
     const { filePath } = await dialog.showSaveDialog({
       title: "保存 Txt 文件",
@@ -180,9 +187,14 @@ ipcMain.on("export-txt", async (event, poetryList) => {
       filters: [
         { name: "Txt 文件", extensions: ["txt"] },
         { name: "所有文件", extensions: ["*"] }
-      ]
+      ],
+      parent: mainWin, // 添加父窗口
+      modal: true // 设置为模态对话框
     });
-
+    // 恢复窗口的置顶状态
+    if (wasAlwaysOnTop) {
+      mainWin.setAlwaysOnTop(true);
+    }
     if (!filePath) {
       event.sender.send("export-txt-reply", {
         success: false,
@@ -217,12 +229,19 @@ ipcMain.on("export-txt", async (event, poetryList) => {
   }
 });
 
-ipcMain.on("export-html", async (event, poetryList) => {
+ipcMain.on("export-html", async (event, fname, poetryList) => {
   //获取当前日期时间
   const now = new Date();
   const timestamp = now.getTime();
-  const fileName = `诗歌_${timestamp}.html`;
+  const fileName = `${fname}_${timestamp}.html`;
   try {
+    // 保存当前窗口的置顶状态
+    const wasAlwaysOnTop = mainWin.isAlwaysOnTop();
+
+    // 临时取消置顶状态
+    if (wasAlwaysOnTop) {
+      mainWin.setAlwaysOnTop(false);
+    }
     // 弹出保存对话框
     const { filePath } = await dialog.showSaveDialog({
       title: "保存 Html 文件",
@@ -230,15 +249,22 @@ ipcMain.on("export-html", async (event, poetryList) => {
       filters: [
         { name: "Html 文件", extensions: ["html"] },
         { name: "所有文件", extensions: ["*"] }
-      ]
+      ],
+      parent: mainWin, // 添加父窗口
+      modal: true // 设置为模态对话框
     });
+
+    // 恢复窗口的置顶状态
+    if (wasAlwaysOnTop) {
+      mainWin.setAlwaysOnTop(true);
+    }
     if (!filePath) {
       event.sender.send("export-html-reply", {
         success: false,
         message: "用户取消保存"
       });
     } else {
-      await createHtml(poetryList, mainWin).then((htmlContent) => {
+      await createHtml(fname, poetryList, mainWin).then((htmlContent) => {
         if (mainWin && mainWin.webContents) {
           mainWin.webContents.send("hidetip");
         }
@@ -266,12 +292,19 @@ ipcMain.on("export-html", async (event, poetryList) => {
   }
 });
 
-ipcMain.on("export-epub", async (event, poetryList) => {
+ipcMain.on("export-epub", async (event, fname, poetryList) => {
   //获取当前日期时间
   const now = new Date();
   const timestamp = now.getTime();
-  const fileName = `诗歌_${timestamp}.epub`;
+  const fileName = `${fname}_${timestamp}.epub`;
   try {
+    // 保存当前窗口的置顶状态
+    const wasAlwaysOnTop = mainWin.isAlwaysOnTop();
+
+    // 临时取消置顶状态
+    if (wasAlwaysOnTop) {
+      mainWin.setAlwaysOnTop(false);
+    }
     // 弹出保存对话框
     const { filePath } = await dialog.showSaveDialog({
       title: "保存 Epub 文件",
@@ -279,15 +312,21 @@ ipcMain.on("export-epub", async (event, poetryList) => {
       filters: [
         { name: "Epub 文件", extensions: ["epub"] },
         { name: "所有文件", extensions: ["*"] }
-      ]
+      ],
+      parent: mainWin, // 添加父窗口
+      modal: true // 设置为模态对话框
     });
+    // 恢复窗口的置顶状态
+    if (wasAlwaysOnTop) {
+      mainWin.setAlwaysOnTop(true);
+    }
     if (!filePath) {
       event.sender.send("export-epub-reply", {
         success: false,
         message: "用户取消保存"
       });
     } else {
-      await createEpub(poetryList, mainWin).then((epubContent) => {
+      await createEpub(fname, poetryList, mainWin).then((epubContent) => {
         if (mainWin && mainWin.webContents) {
           mainWin.webContents.send("hidetip");
         }

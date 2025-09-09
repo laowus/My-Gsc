@@ -1,6 +1,6 @@
 const { ipcMain } = require("electron");
 const { getInfoList } = require("./dbtool");
-const { KINDS, DYNASTYS } = require("./utils");
+const { KINDS, DYNASTYS } = require("./tools");
 
 const convertHtml = (text) => {
   let _txt = text;
@@ -36,14 +36,14 @@ const convertHtml = (text) => {
 };
 
 // 生成HTML内容
-const generateHtml = async (poetryList, mainWin) => {
+const generateHtml = async (fname, poetryList, mainWin) => {
   let htmlContent = `
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>古诗词合集</title>
+    <title>关于 [ ${fname} ] 的诗词</title>
     <style>
         body {
             font-family: 'SimSun', '宋体', serif;
@@ -120,7 +120,7 @@ const generateHtml = async (poetryList, mainWin) => {
 </head>
 <body>
     <div class="page-header">
-        <h1 class="page-title">古诗词精选合集</h1>
+        <h1 class="page-title">关于 [ ${fname} ] 的诗词 </h1>
         <p class="page-subtitle">共收录 ${poetryList.length} 首诗词</p>
     </div>
 `;
@@ -199,14 +199,14 @@ const getInfos = (poetryid) => {
   });
 };
 
-const createHtml = async (poetryList, mainWin) => {
+const createHtml = async (fname, poetryList, mainWin) => {
   if (!poetryList || poetryList.length === 0) {
     console.log("chapters 数组为空");
     return "";
   }
 
   try {
-    const htmlContent = await generateHtml(poetryList, mainWin);
+    const htmlContent = await generateHtml(fname, poetryList, mainWin);
     return htmlContent;
   } catch (err) {
     console.error("生成HTML过程中出现错误:", err);

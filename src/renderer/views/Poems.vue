@@ -228,7 +228,7 @@ const handleExport = async (format) => {
         ElMessage.error(res.message);
       }
     });
-    ipcRenderer.send("export-txt", toRaw(poetryList.value));
+    ipcRenderer.send("export-txt", keyword.value, toRaw(poetryList.value));
   } else if (format === "html" && poetryList.value.length > 0) {
     ipcRenderer.once("export-html-reply", (event, res) => {
       console.log(res);
@@ -238,7 +238,7 @@ const handleExport = async (format) => {
         ElMessage.error(res.message);
       }
     });
-    ipcRenderer.send("export-html", toRaw(poetryList.value));
+    ipcRenderer.send("export-html", keyword.value, toRaw(poetryList.value));
   } else if (format === "epub" && poetryList.value.length > 0) {
     ipcRenderer.once("export-epub-reply", (event, res) => {
       console.log(res);
@@ -248,7 +248,7 @@ const handleExport = async (format) => {
         ElMessage.error(res.message);
       }
     });
-    ipcRenderer.send("export-epub", toRaw(poetryList.value));
+    ipcRenderer.send("export-epub", keyword.value, toRaw(poetryList.value));
   } else {
     ElMessage.error("当前没有诗歌可以导出");
   }

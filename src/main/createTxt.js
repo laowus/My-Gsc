@@ -1,6 +1,6 @@
 const { ipcMain } = require("electron");
 const { getInfoList } = require("./dbtool");
-const { KINDS, DYNASTYS } = require("./utils");
+const { KINDS, DYNASTYS } = require("./tools");
 const convertText = (text) => {
   let _txt = text.replace(/<br[^>]*>/gi, "\n");
   _txt = _txt.replace(/<\/?em>/gi, "");
@@ -46,21 +46,19 @@ const generateTxt = async (poetryList, mainWin) => {
     console.log(`处理进度: ${currentIndex}/${totalLength} - ${poetry.title}`);
 
     // 添加美观的诗歌标题格式
-    const poetryStr = `\n\n${"=".repeat(60)}
-【${poetry.title}】\n
-(${KINDS[poetry.kindid]}) [${DYNASTYS[poetry.writer.dynastyid]}] ${poetry.writer.writername}\n
-
-${"=".repeat(60)}\n\n${convertText(poetry.content)}\n`;
+    const poetryStr = `\n
+【${poetry.title}】
+(${KINDS[poetry.kindid]}) [${DYNASTYS[poetry.writer.dynastyid]}] ${poetry.writer.writername}
+${"=".repeat(60)}\n${convertText(poetry.content)}\n`;
 
     localTxtContent += poetryStr;
 
     try {
       // 使用await等待getInfos执行完成
       const infos = await getInfos(poetry.poetryid);
-      console.log(infos);
 
       if (infos && infos.length > 0) {
-        localTxtContent += `\n${"─".repeat(40)}\n【相关注释】\n${"─".repeat(40)}\n`;
+        localTxtContent += `\n${"─".repeat(40)}\n`;
 
         for (const info of infos) {
           let infoStr = `▪ ${info.title}\n${convertText(info.content)}\n\n`;

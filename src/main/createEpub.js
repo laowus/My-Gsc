@@ -1,5 +1,5 @@
 const { ipcMain } = require("electron");
-const { KINDS, DYNASTYS } = require("./utils");
+const { KINDS, DYNASTYS } = require("./tools");
 const JSZip = require("jszip");
 const { getInfoList } = require("./dbtool");
 const convertHtml = (text) => {
@@ -42,7 +42,7 @@ const generateNavPoints = (poetryList, parentPlayOrder = 1) => {
     const playOrder = currentPlayOrder++;
     let navPoint = `<navPoint id="navPoint-${id}" playOrder="${playOrder}">
                   <navLabel>
-                    <text>${poetry.title}</text>
+                    <text>${poetry.title} (${poetry.writer.writername} )</text>
                   </navLabel>
                   <content src="./OEBPS/${id}.xhtml" />`;
     navPoint += `</navPoint>`;
@@ -61,9 +61,9 @@ const getInfos = (poetryid) => {
   });
 };
 
-const createEpub = async (poetryList, mainWin) => {
-  const title = "诗歌";
-  const author = "未知";
+const createEpub = async (fname, poetryList, mainWin) => {
+  const title = fname;
+  const author = "黄老五";
   return new Promise((resolve, reject) => {
     try {
       const zip = new JSZip();
