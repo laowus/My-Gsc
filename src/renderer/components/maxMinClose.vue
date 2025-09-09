@@ -15,27 +15,34 @@ const handleMix = () => {
 };
 
 const handleTop = () => {
-  ipcRenderer.send("window-top", !isTop.value);
   isTop.value = !isTop.value;
+  ipcRenderer.send("window-top", isTop.value);
 };
 
 onMounted(() => {
-  const isTp = ipcRenderer.sendSync("isTop");
-  console.log(isTp);
-  isTop.value = isTp;
+  // 获取初始置顶状态
+  try {
+    const isTp = ipcRenderer.sendSync("isTop");
+    isTop.value = isTp;
+  } catch (error) {
+    console.error("获取置顶状态失败:", error);
+    isTop.value = false;
+  }
 });
-
-// 新增计算属性
-const topClass = computed(() => {
-  return isTop.value ? { isTop: true } : { noTop: true };
+// 计算属性：根据置顶状态返回对应的类名和标题
+const topButtonInfo = computed(() => {
+  return {
+    class: isTop.value ? "isTop" : "noTop",
+    title: isTop.value ? "取消置顶" : "置顶"
+  };
 });
 </script>
 <template>
   <div class="bar">
     <div class="drag"></div>
     <div class="maxMinClose">
-      <button title="置顶">
-        <span @click="handleTop" class="iconfont icon-zhiding" :class="topClass" title="置顶"></span>
+      <button :title="topButtonInfo.title" @click="handleTop">
+        <span class="iconfont icon-zhiding" :class="topButtonInfo.class"></span>
       </button>
       <button title="最小化">
         <span @click="handleMix" class="iconfont icon-iczoomout2" title="最小化"></span>

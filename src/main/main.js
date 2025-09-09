@@ -7,6 +7,8 @@ const { publicDir } = require("./pathUtils");
 const { initDatabase } = require("./dbtool");
 const { createEpub } = require("./createEpub");
 const { createTxt } = require("./createTxt");
+const { createHtml } = require("./createHtml");
+
 const Store = require("electron-store");
 const store = new Store();
 const dbHandle = require("./dbhandle");
@@ -50,12 +52,17 @@ const createWindow = () => {
     // 增加默认值处理，避免 NaN
     const windowX = parseInt(store.get("mainWindowX")) || 0;
     const windowY = parseInt(store.get("mainWindowY"));
+
+    // 从 electron-store 中获取置顶状态，默认为 false
+    const isAlwaysOnTop = store.get("isAlwaysOnTop", false);
+
     const mainWindow = new BrowserWindow({
       ...options,
       width: windowWidth,
       height: windowHeight,
       x: windowX,
-      y: windowY
+      y: windowY,
+      alwaysOnTop: isAlwaysOnTop // 设置初始置顶状态
     });
     if (isDevEnv) {
       mainWindow.loadURL("http://localhost:9000/");
@@ -115,14 +122,20 @@ ipcMain.on("window-top", (event, isTop) => {
   const win = BrowserWindow.fromWebContents(webContent);
   if (win) {
     win.setAlwaysOnTop(isTop);
+    // 保存置顶状态到 electron-store
+    store.set("isAlwaysOnTop", isTop);
   }
 });
-
 // 修改获取置顶状态事件监听
 ipcMain.on("isTop", (event) => {
   const webContent = event.sender;
   const win = BrowserWindow.fromWebContents(webContent);
-  event.returnValue = win ? win.isAlwaysOnTop() : false;
+  if (win) {
+    const isTop = win.isAlwaysOnTop();
+    event.returnValue = isTop;
+  } else {
+    event.returnValue = false;
+  }
 });
 
 ipcMain.on("window-min", (event) => {
@@ -200,6 +213,104 @@ ipcMain.on("export-txt", async (event, poetryList) => {
     event.sender.send("export-txt-reply", {
       success: false,
       message: "文件写入失败,请重试或者检查文件!"
+    });
+  }
+});
+
+ipcMain.on("export-html", async (event, poetryList) => {
+  //获取当前日期时间
+  const now = new Date();
+  const timestamp = now.getTime();
+  const fileName = `诗歌_${timestamp}.html`;
+  try {
+    // 弹出保存对话框
+    const { filePath } = await dialog.showSaveDialog({
+      title: "保存 Html 文件",
+      defaultPath: fileName,
+      filters: [
+        { name: "Html 文件", extensions: ["html"] },
+        { name: "所有文件", extensions: ["*"] }
+      ]
+    });
+    if (!filePath) {
+      event.sender.send("export-html-reply", {
+        success: false,
+        message: "用户取消保存"
+      });
+    } else {
+      await createHtml(poetryList, mainWin).then((htmlContent) => {
+        if (mainWin && mainWin.webContents) {
+          mainWin.webContents.send("hidetip");
+        }
+        fs.writeFile(filePath, htmlContent, (err) => {
+          if (err) {
+            event.sender.send("export-html-reply", {
+              success: false,
+              message: "文件写入失败,请重试或者检查文件!"
+            });
+          } else {
+            event.sender.send("export-html-reply", {
+              success: true,
+              message: fileName + " 导出成功!"
+            });
+          }
+        });
+      });
+      return { success: true, filePath };
+    }
+  } catch (error) {
+    event.sender.send("export-html-reply", {
+      success: false,
+      message: "文件写入失败,请重试或者检查文件! 错误信息: " + error.message
+    });
+  }
+});
+
+ipcMain.on("export-epub", async (event, poetryList) => {
+  //获取当前日期时间
+  const now = new Date();
+  const timestamp = now.getTime();
+  const fileName = `诗歌_${timestamp}.epub`;
+  try {
+    // 弹出保存对话框
+    const { filePath } = await dialog.showSaveDialog({
+      title: "保存 Epub 文件",
+      defaultPath: fileName,
+      filters: [
+        { name: "Epub 文件", extensions: ["epub"] },
+        { name: "所有文件", extensions: ["*"] }
+      ]
+    });
+    if (!filePath) {
+      event.sender.send("export-epub-reply", {
+        success: false,
+        message: "用户取消保存"
+      });
+    } else {
+      await createEpub(poetryList, mainWin).then((epubContent) => {
+        if (mainWin && mainWin.webContents) {
+          mainWin.webContents.send("hidetip");
+        }
+        fs.writeFile(filePath, epubContent, (err) => {
+          if (err) {
+            event.sender.send("export-epub-reply", {
+              success: false,
+              message: "文件写入失败,请重试或者检查文件!"
+            });
+          } else {
+            event.sender.send("export-epub-reply", {
+              success: true,
+              message: fileName + " 导出成功!"
+            });
+          }
+        });
+      });
+      return { success: true, filePath };
+    }
+  } catch (error) {
+    event.sender.send("export-epub-reply", {
+      success: false,
+      message: "文件写入失败,请重试或者检查文件! 错误信息: " + error.message
     });
   }
 });

@@ -1,51 +1,71 @@
 const { ipcMain } = require("electron");
+const { KINDS, DYNASTYS } = require("./utils");
 const JSZip = require("jszip");
+const { getInfoList } = require("./dbtool");
+const convertHtml = (text) => {
+  let _txt = text;
 
+  // 处理HTML实体编码
+  const htmlEntities = {
+    "&quot;": '"',
+    "&lt;": "<",
+    "&gt;": ">",
+    "&amp;": "&",
+    "&apos;": "'",
+    "&#39;": "'",
+    "&nbsp;": " ",
+    "&hellip;": "…",
+    "&mdash;": "—",
+    "&ndash;": "–"
+  };
+
+  // 替换所有HTML实体
+  for (const [entity, char] of Object.entries(htmlEntities)) {
+    const regex = new RegExp(entity, "g");
+    _txt = _txt.replace(regex, char);
+  }
+
+  // 转换换行符为HTML的<br>标签
+  _txt = _txt.replace(/<br[^>]*>/gi, "<br>");
+  _txt = _txt.replace(/\n/g, "<br>");
+
+  // 移除em标签
+  _txt = _txt.replace(/<\/?em>/gi, "");
+
+  return _txt;
+};
 // 递归生成 navPoints 的函数
-const generateNavPoints = (chapters, parentPlayOrder = 1) => {
+const generateNavPoints = (poetryList, parentPlayOrder = 1) => {
   let currentPlayOrder = parentPlayOrder;
-  return chapters.map((chapter, index) => {
-    const id = `chapter${chapter.href}`;
+  return poetryList.map((poetry, index) => {
+    const id = `chapter${poetry.poetryid}`;
     const playOrder = currentPlayOrder++;
     let navPoint = `<navPoint id="navPoint-${id}" playOrder="${playOrder}">
                   <navLabel>
-                    <text>${chapter.label}</text>
+                    <text>${poetry.title}</text>
                   </navLabel>
                   <content src="./OEBPS/${id}.xhtml" />`;
-    if (chapter.subitems && chapter.subitems.length > 0) {
-      const subNavPoints = generateNavPoints(chapter.subitems, currentPlayOrder);
-      currentPlayOrder += subNavPoints.length;
-      navPoint += subNavPoints.join("\n");
-    }
     navPoint += `</navPoint>`;
     return navPoint.trim();
   });
 };
-
-// 扁平化章节列表的函数
-const flattenChapters = (chapters) => {
-  return chapters.flatMap((chapter) => [chapter, ...(chapter.subitems ? flattenChapters(chapter.subitems) : [])]);
+const getInfos = (poetryid) => {
+  return new Promise((resolve, reject) => {
+    getInfoList(1, poetryid, (result) => {
+      if (result.success) {
+        resolve(result.data || result);
+      } else {
+        reject(new Error("获取信息数据失败"));
+      }
+    });
+  });
 };
 
-// 格式化文本，添加分段和缩进
-const formatText = (text) => {
-  const lines = text.split("\n");
-  let paragraphs = [];
-
-  for (let line of lines) {
-    line = line.trim();
-    if (line !== "") {
-      paragraphs.push(`<p>${line}</p>`);
-    }
-  }
-
-  return paragraphs.join("\n");
-};
-
-const createEpub = async (chapters, metadata, mainWin) => {
+const createEpub = async (poetryList, mainWin) => {
+  const title = "诗歌";
+  const author = "未知";
   return new Promise((resolve, reject) => {
     try {
-      const { author, title, cover } = metadata; // 从 metadata 中获取封面路径
       const zip = new JSZip();
       zip.file("mimetype", "application/epub+zip", { compression: "STORE" });
       zip.folder("META-INF").file(
@@ -57,17 +77,8 @@ const createEpub = async (chapters, metadata, mainWin) => {
                 </rootfiles>
             </container>`.trim()
       );
-
-      // 添加封面图片到 OEBPS 文件夹
-      if (cover) {
-        const fs = require("fs");
-        const coverData = fs.readFileSync(cover);
-        const coverFileName = "cover.jpg"; // 假设封面图片为 JPG 格式
-        zip.folder("OEBPS").file(coverFileName, coverData);
-      }
-
       // 调用递归函数生成 navPoints
-      const navPoints = generateNavPoints(chapters).join("\n");
+      const navPoints = generateNavPoints(poetryList).join("\n");
 
       // 目录页面
       zip.folder("").file(
@@ -92,89 +103,150 @@ const createEpub = async (chapters, metadata, mainWin) => {
             </ncx>`.trim()
       );
 
-      // 扁平化章节列表
-      const flatChapters = flattenChapters(chapters);
-
       // 生成 manifest
-      const manifestItems = flatChapters.map(
-        (chapter, index) => `
-        <item id="chap${chapter.href}" href="OEBPS/chapter${chapter.href}.xhtml" media-type="application/xhtml+xml"/>
+      const manifestItems = poetryList.map(
+        (poetry, index) => `
+        <item id="chap${poetry.poetryid}" href="OEBPS/chapter${poetry.poetryid}.xhtml" media-type="application/xhtml+xml"/>
     `
       );
-
-      if (cover) {
-        const coverFileName = "cover.jpg";
-        manifestItems.push(`
-          <item id="cover-image" href="OEBPS/${coverFileName}" media-type="image/jpeg"/>
-          <item id="cover" href="OEBPS/cover.xhtml" media-type="application/xhtml+xml"/>
-        `);
-      }
 
       const manifest = manifestItems.join("").trim();
 
       // 生成 spine
-      const spineItems = flatChapters.map(
-        (chapter, index) => `
-        <itemref idref="chap${chapter.href}"/>`
+      const spineItems = poetryList.map(
+        (poetry, index) => `
+        <itemref idref="chap${poetry.poetryid}"/>`
       );
-
-      if (cover) {
-        spineItems.unshift(`<itemref idref="cover" linear="yes"/>`);
-      }
 
       const spine = spineItems.join("").trim();
 
-      // 生成封面页面
-      if (cover) {
-        const coverFileName = "cover.jpg";
-        zip.folder("OEBPS").file(
-          "cover.xhtml",
-          `<?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
-          <html xmlns="http://www.w3.org/1999/xhtml" lang="zh">
-            <head>
-              <title>封面</title>
-            </head>
-            <body>
-              <img src="${coverFileName}" alt="封面" />
-            </body>
-          </html>
-          `.trim()
-        );
-      }
-
       // 生成内容页面
       // 将 forEach 替换为 for...of 循环
-      const addChapterFiles = async () => {
-        for (const [index, chapter] of flatChapters.entries()) {
-          // 调用 getChap 获取章节内容
-          const result = await getChap(metadata.bookId, chapter.href);
-          // 检查返回结果是否成功
-          const content = result.success ? formatText(result.data.content) : "";
+      const addPoetryListFiles = async () => {
+        const totalLength = poetryList.length;
+
+        for (let i = 0; i < poetryList.length; i++) {
+          const poetry = poetryList[i];
+          const currentIndex = i + 1;
           // 使用 mainWindow.webContents.send 发送消息给渲染进程
+          // 发送进度信息给渲染进程
           if (mainWin && mainWin.webContents) {
-            mainWin.webContents.send("showtip", chapter.label);
+            mainWin.webContents.send("showtip", `${poetry.title} 正在处理 ${currentIndex}/${totalLength}`);
           }
-          zip.folder("OEBPS").file(
-            `chapter${chapter.href}.xhtml`,
-            `<?xml version="1.0" encoding="UTF-8"?>
-                <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
-                <html xmlns="http://www.w3.org/1999/xhtml" lang="zh">
-                  <head>
-                    <title>${chapter.label}</title>
-                    <link rel="stylesheet" type="text/css" href="../style.css"/>
-                  </head>
-                  <body>
-                  ${content}
-                  </body>
-                </html>
-              `.trim()
-          );
+          let htmlContent = `
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>古诗词合集</title>
+    <style>
+        body {
+            font-family: 'SimSun', '宋体', serif;
+            line-height: 1.8;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        .poetry-container {
+            background: white;
+            padding: 30px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .poetry-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .poetry-content {
+            font-size: 18px;
+            text-align: center;
+            margin: 30px 0;
+            line-height: 2;
+        }
+        .info-section {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-left: 4px solid #3498db;
+        }
+        .info-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .info-content {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.6;
+        }
+        .separator {
+            height: 2px;
+            background: linear-gradient(to right, #3498db, #2c3e50, #3498db);
+            margin: 40px 0;
+            border-radius: 1px;
+        }
+        .page-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+        }
+        .page-title {
+            font-size: 28px;
+            margin: 0;
+        }
+        .page-subtitle {
+            font-size: 16px;
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="poetry-container">
+        <h2 class="poetry-title">${poetry.title}</h2>
+        <h3>(${KINDS[poetry.kindid]}) [${DYNASTYS[poetry.writer.dynastyid]}] ${poetry.writer.writername}</h3>
+        <div class="poetry-content">${convertHtml(poetry.content)}</div>`;
+          try {
+            const infos = await getInfos(poetry.poetryid);
+            if (infos && infos.length > 0) {
+              htmlContent += `
+        <div class="info-section">`;
+              for (const info of infos) {
+                htmlContent += `
+            <div class="info-item">
+                <h4 class="info-title">${info.title}</h4>
+                <div class="info-content">${convertHtml(info.content)}</div>
+            </div>
+          `;
+              }
+              htmlContent += `</div>`;
+            }
+            htmlContent += `</div>`;
+          } catch (error) {
+            console.error(`获取诗歌 ${poetry.poetryid} 的信息失败:`, error);
+            htmlContent += `</div></body>
+</html>`;
+          }
+
+          zip.folder("OEBPS").file(`chapter${poetry.poetryid}.xhtml`, htmlContent.trim());
         }
       };
 
       // 等待所有章节文件添加完成
-      addChapterFiles()
+      addPoetryListFiles()
         .then(() => {
           const tocManifest = `<item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>`;
           ipcMain.emit("hidetip");
@@ -189,7 +261,6 @@ const createEpub = async (chapters, metadata, mainWin) => {
                 <dc:language>zh</dc:language>
                 <dc:creator>${author}</dc:creator>
                 <dc:identifier id="book-id">${new Date().getTime()}</dc:identifier>
-                ${cover ? '<meta name="cover" content="cover-image"/>' : ""}
               </metadata>
               <manifest>
                 ${manifest}

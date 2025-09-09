@@ -229,6 +229,26 @@ const handleExport = async (format) => {
       }
     });
     ipcRenderer.send("export-txt", toRaw(poetryList.value));
+  } else if (format === "html" && poetryList.value.length > 0) {
+    ipcRenderer.once("export-html-reply", (event, res) => {
+      console.log(res);
+      if (res.success) {
+        ElMessage.success(`导出成功!`);
+      } else {
+        ElMessage.error(res.message);
+      }
+    });
+    ipcRenderer.send("export-html", toRaw(poetryList.value));
+  } else if (format === "epub" && poetryList.value.length > 0) {
+    ipcRenderer.once("export-epub-reply", (event, res) => {
+      console.log(res);
+      if (res.success) {
+        ElMessage.success(`导出成功!`);
+      } else {
+        ElMessage.error(res.message);
+      }
+    });
+    ipcRenderer.send("export-epub", toRaw(poetryList.value));
   } else {
     ElMessage.error("当前没有诗歌可以导出");
   }

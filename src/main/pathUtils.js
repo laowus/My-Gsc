@@ -14,6 +14,8 @@ const dbPath = path.join(dbDir, "poem.db");
 console.log("数据库文件压缩包地址", dbZipPath);
 console.log("数据库文件保存地址", dbPath);
 
+
+
 module.exports = {
   publicDir,
   dbZipPath,

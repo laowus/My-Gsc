@@ -48,7 +48,7 @@ const initDatabase = async () => {
 };
 //过滤关键字
 const getAllPoetry = (params, callback) => {
-  let sql = ` select p.poetryid, p.kindid, p.typeid,w.dynastyid,w.writerid,w.writername,p.title, p.content from Poetry p join Writer w on p.writerid = w.writerid`;
+  let sql = ` select p.poetryid, p.kindid, p.typeid, w.dynastyid,w.writerid,w.writername,p.title, p.content from Poetry p join Writer w on p.writerid = w.writerid`;
   if (params.ty == "keyword" && params.v !== "") {
     console.log(params);
     sql = sql + ` where p.title LIKE '%${params.v}%' OR w.writername LIKE '%${params.v}%' OR p.content LIKE '%${params.v}%'`;
