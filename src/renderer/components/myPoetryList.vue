@@ -4,6 +4,7 @@ import Poetry from "../model/Poetry";
 import Writer from "../model/Writer";
 import KindIcon from "../components/KindIcon.vue";
 import PoetryDetail from "../components/poetryDetail.vue";
+import { ElMessage } from "element-plus";
 const { ipcRenderer } = window.require("electron");
 
 const props = defineProps({
@@ -22,9 +23,12 @@ const fetchPoetrys = async () => {
     await ipcRenderer.invoke("db-get-all-poetry", { ty: "my", v: props.pids }).then((res) => {
       console.log(res);
       if (res.success) {
-        poetryList.value = res.data.map((item) => {
+        poetryList.value = res.data.map((item, realIndex) => {
           const writer = new Writer(item.writerid, item.writername, item.dynastyid);
-          return new Poetry(item.poetryid, item.typeid, item.kindid, writer, item.title, item.content, item.infos);
+          return {
+            ...new Poetry(item.poetryid, item.typeid, item.kindid, writer, item.title, item.content, item.infos),
+            realIndex: realIndex + 1 // 添加真实循环索引，从1开始
+          };
         });
         curPoetry.value = poetryList.value[0];
       }
@@ -42,7 +46,6 @@ onMounted(async () => {
 watch(
   () => props.pids,
   (newQuery) => {
-    // props.pids = newQuery;
     curIndex.value = 0;
     fetchPoetrys();
   },
@@ -54,15 +57,57 @@ const handlePoemClick = (index) => {
   curIndex.value = index;
   curPoetry.value = poetryList.value[index];
 };
+
+const handleExport = async (format, myType) => {
+  if (format === "txt" && poetryList.value.length > 0) {
+    console.log("format", format);
+    ipcRenderer.once("export-txt-reply", (event, res) => {
+      console.log(res);
+      if (res.success) {
+        ElMessage.success(`导出成功!`);
+      } else {
+        ElMessage.error(res.message);
+      }
+    });
+    ipcRenderer.send("export-txt", myType, toRaw(poetryList.value));
+  } else if (format === "html" && poetryList.value.length > 0) {
+    console.log("format", format);
+    ipcRenderer.once("export-html-reply", (event, res) => {
+      console.log(res);
+      if (res.success) {
+        ElMessage.success(`导出成功!`);
+      } else {
+        ElMessage.error(res.message);
+      }
+    });
+    ipcRenderer.send("export-html", myType, toRaw(poetryList.value));
+  } else if (format === "epub" && poetryList.value.length > 0) {
+    console.log("format", format);
+    ipcRenderer.once("export-epub-reply", (event, res) => {
+      console.log(res);
+      if (res.success) {
+        ElMessage.success(`导出成功!`);
+      } else {
+        ElMessage.error(res.message);
+      }
+    });
+    ipcRenderer.send("export-epub", myType, toRaw(poetryList.value));
+  } else {
+    ElMessage.error("当前没有诗歌可以导出");
+  }
+};
+defineExpose({
+  handleExport
+});
 </script>
 
 <template>
-  <div class="poetrys">
+  <div class="poetrys" v-if="poetryList.length > 0">
     <div class="poetrys-left">
-      <div class="poetrys-left-content" v-if="poetryList.length > 0">
+      <div class="poetrys-left-content">
         <RecycleScroller class="scroller" :items="poetryList" :item-size="120" key-field="poetryid" v-slot="{ item, index }">
           <div class="poetry-item" :class="{ pselected: index === curIndex }" @click="handlePoemClick(index)">
-            <div class="poetry-item-title">{{ index + 1 }} 、{{ item.title }}</div>
+            <div class="poetry-item-title">{{ item.realIndex }} 、{{ item.title }}</div>
             <div class="poetry-item-writer"><KindIcon :kindid="item.kindid" />[{{ item.writer.dynastyname }}] {{ item.writer.writername }}</div>
             <div class="poetry-item-content" v-html="item.content.slice(0, 50) + (item.content.length > 50 ? '...' : '')"></div>
           </div>

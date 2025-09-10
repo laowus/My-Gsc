@@ -3,7 +3,7 @@ const { app, BrowserWindow, ipcMain, Menu, dialog, Tray } = require("electron");
 const isDevEnv = process.env["NODE_ENV"] === "dev";
 const path = require("path");
 const fs = require("fs");
-const { publicDir } = require("./pathUtils");
+const { publicDir, dbPath } = require("./pathUtils");
 const { initDatabase } = require("./dbtool");
 const { createEpub } = require("./createEpub");
 const { createTxt } = require("./createTxt");
@@ -62,7 +62,8 @@ const createWindow = () => {
       height: windowHeight,
       x: windowX,
       y: windowY,
-      alwaysOnTop: isAlwaysOnTop // 设置初始置顶状态
+      alwaysOnTop: isAlwaysOnTop, // 设置初始置顶状态
+      icon: path.join(publicDir, "/images/logo.png")
     });
     if (isDevEnv) {
       mainWindow.loadURL("http://localhost:9000/");
@@ -350,6 +351,70 @@ ipcMain.on("export-epub", async (event, fname, poetryList) => {
     event.sender.send("export-epub-reply", {
       success: false,
       message: "文件写入失败,请重试或者检查文件! 错误信息: " + error.message
+    });
+  }
+});
+
+ipcMain.on("get-database-info", (event) => {
+  getDatabaseInfo().then((info) => {
+    console.log("数据库信息", info);
+    event.sender.send("get-database-info-reply", {
+      success: true,
+      info
+    });
+  });
+});
+
+// 从dbtool.js 中获取数据库文件信息
+
+const getDatabaseInfo = async () => {
+  try {
+    const databasePath = dbPath;
+    let fileSize = 0;
+    let createTime = null;
+    let modifyTime = null;
+
+    if (fs.existsSync(databasePath)) {
+      console.log("数据库文件存在");
+      const stats = fs.statSync(databasePath);
+      fileSize = stats.size;
+      createTime = stats.birthtime;
+      modifyTime = stats.mtime;
+    }
+
+    // 返回数据库信息
+    return {
+      path: databasePath,
+      size: fileSize,
+      createTime: createTime ? createTime.toLocaleString() : null,
+      modifyTime: modifyTime ? modifyTime.toLocaleString() : null
+    };
+  } catch (error) {
+    console.error("获取数据库信息失败:", error);
+    return {
+      path: dbPath,
+      size: 0,
+      createTime: null,
+      modifyTime: null,
+      error: error.message
+    };
+  }
+};
+
+
+ipcMain.on("backup-database", (event) => {
+  // 备份数据库
+  const backupPath = path.join(dbDir, "poem_backup.db");
+  try {
+    fs.copyFileSync(dbPath, backupPath);
+    event.sender.send("backup-database-reply", {
+      success: true,
+      message: "数据库备份成功"
+    });
+  } catch (error) {
+    event.sender.send("backup-database-reply", {
+      success: false,
+      message: "数据库备份失败,请重试或者检查文件! 错误信息: " + error.message
     });
   }
 });

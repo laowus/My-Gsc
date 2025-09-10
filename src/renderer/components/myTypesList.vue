@@ -20,7 +20,6 @@ const curMtid = ref(0);
 
 const fetchMy = async () => {
   await ipcRenderer.invoke("db-get-my-by-poetryid", props.poetry.poetryid || 1).then((res) => {
-    console.log(res);
 
     if (res.success && res.data.length > 0) {
       curMtid.value = res.data[0].mtid;
@@ -31,7 +30,6 @@ const fetchMy = async () => {
 };
 
 onMounted(async () => {
-  console.log("myTypesList,", props.poetry);
   await fetchMy();
 });
 
@@ -51,6 +49,7 @@ const changeMtid = async (v) => {
     if (res.success) {
       console.log("收藏成功");
       fetchMy();
+      EventBus.emit("refresh-my-poetry");
     } else {
       console.log("收藏失败");
     }
