@@ -128,10 +128,13 @@ const createEpub = async (fname, poetryList, mainWin) => {
         for (let i = 0; i < poetryList.length; i++) {
           const poetry = poetryList[i];
           const currentIndex = i + 1;
-          // 使用 mainWindow.webContents.send 发送消息给渲染进程
-          // 发送进度信息给渲染进程
           if (mainWin && mainWin.webContents) {
-            mainWin.webContents.send("showtip", `${poetry.title} 正在处理 ${currentIndex}/${totalLength}`);
+            if (totalLength < 1000) {
+              mainWin.webContents.send("showtip", `${poetry.title} 正在处理 ${currentIndex}/${totalLength}`);
+            } // 大于等于1000条时，每30条发送一次提示
+            else if (currentIndex % 30 === 0 || currentIndex === totalLength) {
+              mainWin.webContents.send("showtip", `${poetry.title} 正在处理 ${currentIndex}/${totalLength}`);
+            }
           }
           let htmlContent = `
 <!DOCTYPE html>

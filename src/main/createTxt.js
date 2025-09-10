@@ -39,7 +39,12 @@ const generateTxt = async (poetryList, mainWin) => {
 
     // 发送进度信息给渲染进程
     if (mainWin && mainWin.webContents) {
-      mainWin.webContents.send("showtip", `${poetry.title} 正在处理 ${currentIndex}/${totalLength}`);
+      if (totalLength < 1000) {
+        mainWin.webContents.send("showtip", `${poetry.title} 正在处理 ${currentIndex}/${totalLength}`);
+      } // 大于等于1000条时，每100条发送一次提示
+      else if (currentIndex % 30 === 0 || currentIndex === totalLength) {
+        mainWin.webContents.send("showtip", `${poetry.title} 正在处理 ${currentIndex}/${totalLength}`);
+      }
     }
 
     // 同时在控制台输出进度
