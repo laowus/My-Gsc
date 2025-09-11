@@ -14,6 +14,7 @@ const curIndex = ref(0);
 const databaseInfo = ref(null);
 const loading = ref(false);
 const backupLoading = ref(false);
+const restoreLoading = ref(false);
 
 const initMyTypes = () => {
   mtStr.value = myTypes.value.join(",");
@@ -52,9 +53,8 @@ const loadDatabaseInfo = () => {
 // 执行数据库备份
 const backupDatabase = () => {
   backupLoading.value = true;
-  // 监听数据库信息回复
 
-  ipcRenderer.once("backup-database-reply", (data) => {
+  ipcRenderer.once("backup-database-reply", (event, data) => {
     backupLoading.value = false;
     if (data.success) {
       ElMessage.success(data.message || "数据库备份成功");
@@ -66,6 +66,28 @@ const backupDatabase = () => {
   });
 
   ipcRenderer.send("backup-database");
+};
+
+// 执行数据库还原
+const restoreDatabase = () => {
+  restoreLoading.value = true;
+
+  ipcRenderer.once("restore-database-reply", (event, data) => {
+    restoreLoading.value = false;
+    if (data.success) {
+      ElMessage.success(data.message || "数据库还原成功");
+      // 还原成功后，提示用户重启应用程序
+      setTimeout(() => {
+        if (confirm("数据库已还原成功，是否立即重启应用程序？")) {
+          ipcRenderer.send("restart-app");
+        }
+      }, 1000);
+    } else {
+      ElMessage.error(data.message || "数据库还原失败");
+    }
+  });
+
+  ipcRenderer.send("restore-database");
 };
 
 onMounted(() => {
@@ -91,7 +113,7 @@ onMounted(() => {
 
       <!-- 数据备份功能 -->
       <div v-if="curIndex === 1" class="backup-container">
-        <h3>数据库备份</h3>
+        <h3>数据库管理</h3>
 
         <!-- 数据库信息展示 -->
         <div class="database-info" v-if="databaseInfo">
@@ -101,7 +123,7 @@ onMounted(() => {
           </div>
           <div class="info-item">
             <span class="label">文件大小:</span>
-            <span class="value">{{ databaseInfo.size }}</span>
+            <span class="value">{{ formatFileSize(databaseInfo.size) }}</span>
           </div>
           <div class="info-item">
             <span class="label">创建时间:</span>
@@ -118,13 +140,18 @@ onMounted(() => {
             {{ backupLoading ? "备份中..." : "立即备份" }}
           </el-button>
 
-          <el-button @click="loadDatabaseInfo" :loading="loading" :disabled="backupLoading">
+          <el-button type="warning" @click="restoreDatabase" :loading="restoreLoading" :disabled="loading || backupLoading">
+            {{ restoreLoading ? "还原中..." : "从备份还原" }}
+          </el-button>
+
+          <el-button @click="loadDatabaseInfo" :loading="loading" :disabled="backupLoading || restoreLoading">
             {{ loading ? "加载中..." : "刷新信息" }}
           </el-button>
         </div>
 
         <div class="backup-tip">
           <el-alert title="备份说明" type="info" :closable="false" description="点击'立即备份'按钮将创建当前数据库的完整备份。备份文件将保存在您选择的位置，文件名包含当前日期和时间戳。" />
+          <el-alert title="还原说明" type="warning" :closable="false" description="点击'从备份还原'按钮将从您选择的备份文件恢复数据库。还原操作将覆盖当前所有数据，还原后需要重启应用程序才能生效。" style="margin-top: 10px" />
         </div>
       </div>
     </div>

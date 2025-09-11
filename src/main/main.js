@@ -401,20 +401,155 @@ const getDatabaseInfo = async () => {
   }
 };
 
-
-ipcMain.on("backup-database", (event) => {
-  // 备份数据库
-  const backupPath = path.join(dbDir, "poem_backup.db");
+ipcMain.on("backup-database", async (event) => {
   try {
-    fs.copyFileSync(dbPath, backupPath);
+    // 保存当前窗口的置顶状态
+    const wasAlwaysOnTop = mainWin.isAlwaysOnTop();
+
+    // 临时取消置顶状态
+    if (wasAlwaysOnTop) {
+      mainWin.setAlwaysOnTop(false);
+    }
+
+    // 获取当前日期时间，用于生成备份文件名
+    const now = new Date();
+    const timestamp = now.getTime();
+    const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}_${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}${String(now.getSeconds()).padStart(2, "0")}`;
+    const defaultBackupPath = path.join(app.getPath("documents"), `poem_backup_${dateStr}.db`);
+
+    // 弹出保存对话框，让用户选择备份位置
+    const { filePath } = await dialog.showSaveDialog({
+      title: "备份数据库",
+      defaultPath: defaultBackupPath,
+      filters: [
+        { name: "数据库文件", extensions: ["db"] },
+        { name: "所有文件", extensions: ["*"] }
+      ],
+      parent: mainWin,
+      modal: true
+    });
+
+    // 恢复窗口的置顶状态
+    if (wasAlwaysOnTop) {
+      mainWin.setAlwaysOnTop(true);
+    }
+
+    if (!filePath) {
+      event.sender.send("backup-database-reply", {
+        success: false,
+        message: "用户取消备份"
+      });
+      return;
+    }
+
+    // 确保数据库文件存在
+    if (!fs.existsSync(dbPath)) {
+      event.sender.send("backup-database-reply", {
+        success: false,
+        message: "数据库文件不存在，无法备份"
+      });
+      return;
+    }
+
+    // 复制数据库文件进行备份
+    fs.copyFileSync(dbPath, filePath);
+
     event.sender.send("backup-database-reply", {
       success: true,
-      message: "数据库备份成功"
+      message: `数据库备份成功，文件保存在：${filePath}`
     });
   } catch (error) {
     event.sender.send("backup-database-reply", {
       success: false,
-      message: "数据库备份失败,请重试或者检查文件! 错误信息: " + error.message
+      message: "数据库备份失败，请重试！错误信息：" + error.message
+    });
+  }
+});
+
+// 添加数据库还原功能
+ipcMain.on("restore-database", async (event) => {
+  try {
+    // 保存当前窗口的置顶状态
+    const wasAlwaysOnTop = mainWin.isAlwaysOnTop();
+
+    // 临时取消置顶状态
+    if (wasAlwaysOnTop) {
+      mainWin.setAlwaysOnTop(false);
+    }
+
+    // 弹出打开对话框，让用户选择备份文件
+    const { filePaths } = await dialog.showOpenDialog({
+      title: "选择数据库备份文件",
+      filters: [
+        { name: "数据库文件", extensions: ["db"] },
+        { name: "所有文件", extensions: ["*"] }
+      ],
+      properties: ["openFile"],
+      parent: mainWin,
+      modal: true
+    });
+
+    // 恢复窗口的置顶状态
+    if (wasAlwaysOnTop) {
+      mainWin.setAlwaysOnTop(true);
+    }
+
+    if (!filePaths || filePaths.length === 0) {
+      event.sender.send("restore-database-reply", {
+        success: false,
+        message: "用户取消还原"
+      });
+      return;
+    }
+
+    const backupFilePath = filePaths[0];
+
+    // 确认是否覆盖当前数据库
+    const { response } = await dialog.showMessageBox({
+      title: "确认还原",
+      message: "还原数据库将覆盖当前所有数据，是否继续？",
+      buttons: ["取消", "确认"],
+      defaultId: 0,
+      cancelId: 0,
+      type: "warning",
+      parent: mainWin,
+      modal: true
+    });
+
+    if (response !== 1) {
+      // 用户点击了取消
+      event.sender.send("restore-database-reply", {
+        success: false,
+        message: "用户取消还原"
+      });
+      return;
+    }
+
+    // 确保备份文件存在
+    if (!fs.existsSync(backupFilePath)) {
+      event.sender.send("restore-database-reply", {
+        success: false,
+        message: "选择的备份文件不存在"
+      });
+      return;
+    }
+
+    // 确保数据库目录存在
+    if (!fs.existsSync(dbDir)) {
+      fs.mkdirSync(dbDir, { recursive: true });
+    }
+
+    // 复制备份文件到数据库位置
+    fs.copyFileSync(backupFilePath, dbPath);
+
+    event.sender.send("restore-database-reply", {
+      success: true,
+      message: "数据库还原成功，请重启应用程序以应用更改"
+    });
+  } catch (error) {
+    event.sender.send("restore-database-reply", {
+      success: false,
+      message: "数据库还原失败，请重试！错误信息：" + error.message
     });
   }
 });
