@@ -3,7 +3,7 @@ const { app, BrowserWindow, ipcMain, Menu, dialog, Tray } = require("electron");
 const isDevEnv = process.env["NODE_ENV"] === "dev";
 const path = require("path");
 const fs = require("fs");
-const { publicDir, dbPath } = require("./pathUtils");
+const { publicDir, dbPath, dbDir } = require("./pathUtils");
 const { initDatabase } = require("./dbtool");
 const { createEpub } = require("./createEpub");
 const { createTxt } = require("./createTxt");
@@ -414,8 +414,7 @@ ipcMain.on("backup-database", async (event) => {
     // 获取当前日期时间，用于生成备份文件名
     const now = new Date();
     const timestamp = now.getTime();
-    const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}_${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}${String(now.getSeconds()).padStart(2, "0")}`;
-    const defaultBackupPath = path.join(app.getPath("documents"), `poem_backup_${dateStr}.db`);
+    const defaultBackupPath = path.join(app.getPath("documents"), `poem_backup_${timestamp}.db`);
 
     // 弹出保存对话框，让用户选择备份位置
     const { filePath } = await dialog.showSaveDialog({

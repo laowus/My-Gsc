@@ -93,6 +93,14 @@ const restoreDatabase = () => {
 onMounted(() => {
   initMyTypes();
 });
+
+const formatFileSize = (size) => {
+  if (!size) return "0 MB";
+
+  // 将字节转换为MB（1MB = 1024 * 1024字节）
+  const mbSize = (size / (1024 * 1024)).toFixed(2);
+  return `${mbSize} MB`;
+};
 </script>
 
 <template>
