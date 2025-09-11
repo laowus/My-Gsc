@@ -91,7 +91,7 @@ const startReadingPoetryContent = () => {
   const contentText = tempDiv.textContent || tempDiv.innerText || "";
 
   // 设置语音内容
-  const fullText = curPoetry.value.title ? `${curPoetry.value.title}。${contentText}` : contentText;
+  const fullText = curPoetry.value.title ? `${curPoetry.value.title}。${curPoetry.value.writer.dynastyname} 。${curPoetry.value.writer.writername} 。${contentText}` : contentText;
   utterance.text = fullText;
 
   // 设置语音
