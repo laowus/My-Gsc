@@ -155,11 +155,9 @@ const startReadingPoetryContent = () => {
   isPlaying.value = true;
 
   // 初始化时选择第一段
-  setTimeout(() => {
-    if (isPlaying.value && paragraphs.length > 0) {
-      selectCurrentParagraph();
-    }
-  }, 100);
+  if (isPlaying.value && paragraphs.length > 0) {
+    selectCurrentParagraph();
+  }
 };
 
 // 开始朗读信息内容
@@ -200,11 +198,11 @@ const startReadingInfoContent = () => {
       curInfoIndex.value++;
 
       // 等待UI更新后再开始朗读下一个内容
-      setTimeout(() => {
-        if (isPlaying.value) {
-          startReadingInfoContent();
-        }
-      }, 300); // 给300毫秒的延迟，确保UI有足够时间更新
+
+      if (isPlaying.value) {
+        startReadingInfoContent();
+      }
+      // 给100毫秒的延迟，确保UI有足够时间更新
     } else {
       // 所有信息内容朗读完毕，结束朗读
       isPlaying.value = false;
@@ -244,12 +242,12 @@ const startReadingInfoContent = () => {
   // 开始播放
   synthesis.speak(utterance);
 
-  // 初始化时选择第一段
-  setTimeout(() => {
-    if (isPlaying.value && paragraphs.length > 0) {
-      selectCurrentParagraph();
-    }
-  }, 100);
+  // // 初始化时选择第一段
+  // setTimeout(() => {
+  //   if (isPlaying.value && paragraphs.length > 0) {
+  //     selectCurrentParagraph();
+  //   }
+  // }, 100);
 };
 
 // 停止TTS
