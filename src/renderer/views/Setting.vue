@@ -15,6 +15,7 @@ const databaseInfo = ref(null);
 const loading = ref(false);
 const backupLoading = ref(false);
 const restoreLoading = ref(false);
+const aboutTabIndex = ref(0);
 
 const initMyTypes = () => {
   mtStr.value = myTypes.value.join(",");
@@ -27,7 +28,10 @@ const changeTab = (index) => {
     loadDatabaseInfo();
   }
 };
-
+// 新增：切换关于页面的子tab
+const changeAboutTab = (index) => {
+  aboutTabIndex.value = index;
+};
 const saveMyTypes = () => {
   const newMyTypes = mtStr.value.split(",");
   setMyTypes(newMyTypes);
@@ -106,12 +110,57 @@ const formatFileSize = (size) => {
 <template>
   <div class="setting">
     <div class="setting-tabs">
-      <div class="tabname" @click="changeTab(0)" :class="{ active: curIndex === 0 }">收藏类型</div>
-      <div class="tabname" @click="changeTab(1)" :class="{ active: curIndex === 1 }">数据备份</div>
+      <div class="tabname" @click="changeTab(0)" :class="{ active: curIndex === 0 }">关于</div>
+      <div class="tabname" @click="changeTab(1)" :class="{ active: curIndex === 1 }">收藏类型</div>
+      <div class="tabname" @click="changeTab(2)" :class="{ active: curIndex === 2 }">数据备份</div>
     </div>
     <div class="setting-right">
+      <!-- 关于 -->
+      <div v-if="curIndex === 0" class="about">
+        <!-- 关于页面的子tab -->
+        <div class="about-tabs">
+          <div class="about-tab" @click="changeAboutTab(0)" :class="{ active: aboutTabIndex === 0 }">软件介绍</div>
+          <div class="about-tab" @click="changeAboutTab(1)" :class="{ active: aboutTabIndex === 1 }">捐赠支持</div>
+        </div>
+        <div v-if="aboutTabIndex === 0" class="about-content">
+          <div class="app-info">
+            <h2>古诗词赏析</h2>
+            <p class="version">版本: 1.0.0</p>
+            <p class="author">作者: 黄老五</p>
+            <div class="app-description">
+              <h3>软件介绍</h3>
+              <p>古诗词赏析是一款专注于中国古典诗词的学习与欣赏工具。我们精心收录了从先秦到清代的经典诗词作品， 提供详细的注释、译文和赏析，帮助用户深入理解诗词的意境和文化内涵。</p>
+
+              <h3>主要功能</h3>
+              <ul>
+                <li>📚 丰富的诗词库：涵盖唐诗宋词等各个朝代的经典作品</li>
+                <li>🔍 智能搜索：支持按作者、标题、内容等多种方式检索</li>
+                <li>🎯 个性化收藏：自定义收藏分类，打造专属诗词库</li>
+                <li>🗣️ 语音朗读：支持文本转语音，聆听诗词之美</li>
+                <li>💾 数据管理：完整的数据备份与恢复功能</li>
+              </ul>
+
+              <h3>联系我们</h3>
+              <p>邮箱：pjhxl@qq.com <br />Q Q：37156760 <br />QQ群：616712461(技术交流) 434503062(古诗词交流)<br /></p>
+            </div>
+          </div>
+        </div>
+        <div v-if="aboutTabIndex === 1" class="donation-content">
+          <h2>支持我们</h2>
+          <p class="donation-description">古诗词赏析是一款完全免费的应用程序，致力于传承和弘扬中华优秀传统文化。 如果您喜欢我的应用，欢迎通过以下方式支持我们，这将帮助我持续改进和添加更多优质内容。</p>
+          <div class="donation-methods">
+            <div class="donation-item">
+              <img src="../assets/images/weichat.jpg" width="200" />
+            </div>
+
+            <div class="donation-item">
+              <img src="../assets/images/alipay.jpg" width="200" />
+            </div>
+          </div>
+        </div>
+      </div>
       <!-- 收藏类型设置 -->
-      <div class="myTypes" v-if="curIndex === 0">
+      <div class="myTypes" v-if="curIndex === 1">
         <div>
           <el-input v-model="mtStr" style="width: 300px" />
           <el-button type="success" @click="saveMyTypes">修改</el-button>
@@ -120,7 +169,7 @@ const formatFileSize = (size) => {
       </div>
 
       <!-- 数据备份功能 -->
-      <div v-if="curIndex === 1" class="backup-container">
+      <div class="backup-container" v-if="curIndex === 2">
         <h3>数据库管理</h3>
 
         <!-- 数据库信息展示 -->
@@ -264,5 +313,105 @@ const formatFileSize = (size) => {
 
 .backup-tip {
   margin-top: 20px;
+} /* 关于页面的子tab样式 */
+.about-tabs {
+  display: flex;
+  margin-bottom: 30px;
+  border-bottom: 1px solid #e4e7ed;
+}
+
+.about-tab {
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #606266;
+  border-bottom: 2px solid transparent;
+  transition: all 0.3s;
+}
+
+.about-tab:hover {
+  color: #409eff;
+}
+
+.about-tab.active {
+  color: #409eff;
+  border-bottom-color: #409eff;
+}
+
+/* 软件介绍样式 */
+.about-content,
+.donation-content {
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-info h2 {
+  color: #303133;
+  margin-bottom: 20px;
+}
+
+.version,
+.author,
+.email {
+  margin: 5px 0;
+  color: #606266;
+}
+
+.app-description {
+  margin-top: 30px;
+}
+
+.app-description h3 {
+  color: #303133;
+  margin: 20px 0 10px 0;
+}
+
+.app-description ul {
+  margin: 10px 0;
+  padding-left: 20px;
+}
+
+.app-description li {
+  margin: 8px 0;
+  color: #606266;
+}
+
+/* 捐赠支持样式 */
+.donation-info h2 {
+  color: #303133;
+  margin-bottom: 20px;
+}
+
+.donation-description {
+  color: #606266;
+  line-height: 1.6;
+  margin-bottom: 50px;
+}
+
+.donation-methods {
+  display: flex;
+  flex-direction: row;
+  gap: 30px;
+  width: 90%;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.donation-item {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+  width: 50%;
+}
+
+.donation-item h3 {
+  color: #303133;
+  margin-bottom: 10px;
+}
+
+.donation-item p {
+  color: #606266;
+  margin-bottom: 15px;
 }
 </style>
